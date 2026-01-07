@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: InterviewSys
+  profiles:
+    active: prod
