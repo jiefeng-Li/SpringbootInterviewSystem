@@ -3,3 +3,6 @@ spring:
     name: InterviewSys
   profiles:
     active: prod
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
