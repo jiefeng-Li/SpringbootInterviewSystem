@@ -5,13 +5,13 @@
 <mapper namespace="com.cuit.interviewsystem.mapper.UserMapper">
 
     <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.User">
-            <id property="user_id" column="user_id" />
+            <id property="userId" column="user_id" />
             <result property="username" column="username" />
             <result property="role" column="role" />
             <result property="email" column="email" />
             <result property="phone" column="phone" />
             <result property="password" column="password" />
-            <result property="avatar_url" column="avatar_url" />
+            <result property="avatarUrl" column="avatar_url" />
             <result property="profile" column="profile" />
             <result property="account_status" column="account_status" />
             <result property="last_login_time" column="last_login_time" />

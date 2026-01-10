@@ -2,6 +2,7 @@ package com.cuit.interviewsystem.mapper;
 
 import com.cuit.interviewsystem.model.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 /**
 * @author jiefe
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2026-01-09 16:15:57
 * @Entity generator.domain.TUser
 */
+@Mapper
 public interface UserMapper extends BaseMapper<User> {
 
 }
