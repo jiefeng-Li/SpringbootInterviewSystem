@@ -13,4 +13,10 @@ public class GlobalExceptionHandler {
         log.error("RuntimeException", e);
         return Result.error(ErrorEnum.SYSTEM_ERROR, "系统错误");
     }
+
+    @ExceptionHandler(BusinessException.class)
+    public Result<?> businessExceptionHandler(BusinessException e) {
+        log.error("RuntimeException", e);
+        return Result.error(e.getCode(), e.getMessage());
+    }
 }

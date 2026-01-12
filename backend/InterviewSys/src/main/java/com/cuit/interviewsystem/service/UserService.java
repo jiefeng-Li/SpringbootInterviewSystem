@@ -1,5 +1,6 @@
 package com.cuit.interviewsystem.service;
 
+import com.cuit.interviewsystem.model.dto.UserLoginDto;
 import com.cuit.interviewsystem.model.dto.UserRegisterDto;
 import com.cuit.interviewsystem.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -10,5 +11,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2026-01-09 16:15:57
 */
 public interface UserService extends IService<User> {
-    long userRegister(UserRegisterDto userRegisterDto);
+    long sysAdminRegister(UserRegisterDto userRegisterDto);
+
+    User login(UserLoginDto userLoginDto);
 }
