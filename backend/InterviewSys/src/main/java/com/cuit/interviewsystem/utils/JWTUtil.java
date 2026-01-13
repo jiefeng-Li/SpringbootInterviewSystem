@@ -4,7 +4,6 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.jwt.JWT;
 import com.cuit.interviewsystem.model.entity.User;
-import com.cuit.interviewsystem.model.vo.UserLoginVo;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.util.Date;
@@ -33,17 +32,6 @@ public class JWTUtil {
         if (StrUtil.isBlankIfStr(token))
             return false; // 在核验jwt时，如果为空调用verify会抛出错误
         return JWT.of(token).setKey(JWT_SECRET_KEY.getBytes()).verify();
-    }
-
-    public static UserLoginVo parse(String token){
-        UserLoginVo res = null;
-        if (verify(token)){
-            res = new UserLoginVo();
-            res.setRole(JWT.of(token).getPayload("role").toString());
-            res.setUserId(Long.parseLong(JWT.of(token).getPayload("userId").toString()));
-            res.setCompanyId(Long.parseLong(JWT.of(token).getPayload("companyId").toString()));
-        }
-        return res;
     }
 
     public static String parse(String token, String name){

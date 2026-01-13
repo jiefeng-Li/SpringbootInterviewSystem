@@ -11,6 +11,7 @@ import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.model.dto.UserLoginDto;
 import com.cuit.interviewsystem.model.dto.UserRegisterDto;
+import com.cuit.interviewsystem.model.dto.UsersAddDto;
 import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.service.UserService;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -124,8 +126,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         return user;
     }
+
+    @Override
+    public UsersAddDto usersAdd(UsersAddDto usersAddDto) {
+        ThrowUtil.throwIfTure(
+                ObjUtil.isEmpty(usersAddDto)
+                        || ObjUtil.isEmpty(usersAddDto.getCnt())
+                        || ObjUtil.isEmpty(usersAddDto.getCnt()),
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
+        ThrowUtil.throwIfTure(
+                usersAddDto.getCnt() != usersAddDto.getList().size(),
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "数据输入异常")
+        );
+        //数据校验start
+        int cnt = usersAddDto.getCnt();
+        List<String> uniqueUsernameList = usersAddDto.getList().stream()
+                .map(User::getUsername).filter(name -> !StrUtil.isBlankIfStr(name))//过滤掉空字符串
+                .distinct().toList();
+        List<String> uniquePhoneList = usersAddDto.getList().stream()
+                .map(User::getPhone).filter(phone -> !StrUtil.isBlankIfStr(phone))//过滤掉空字符串
+                .distinct().toList();
+        List<String> passwordList = usersAddDto.getList().stream()
+                .map(User::getPassword).filter(p -> !StrUtil.isBlankIfStr(p))//过滤掉空字符串
+                .toList();
+        List<String> uniqueEmailList = usersAddDto.getList().stream()
+                .map(User::getEmail).filter(e -> !StrUtil.isBlankIfStr(e))//过滤掉空字符串
+                .distinct().toList();
+        ThrowUtil.throwIfTure(
+                uniqueUsernameList.size() != cnt,
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "用户名重复或为空"));
+        ThrowUtil.throwIfTure(uniquePhoneList.size() != cnt,
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "手机号重复或为空"));
+        ThrowUtil.throwIfTure(uniqueEmailList.size() != cnt,
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "邮箱重复或为空"));
+        for (String password : passwordList) {
+            ThrowUtil.throwIfTure(
+                    StrUtil.isBlankIfStr(password),
+                    new BusinessException(ErrorEnum.PARAMS_ERROR, "密码不能为空"));
+            //密码长度在8-20，只包含且至少包含一个数字字母与一个数字，
+            ThrowUtil.throwIfTure(
+                    !password.matches(PASSWORD_MATCH_RULE),
+                    ErrorEnum.PARAMS_ERROR.getCode(),
+                    "密码不符合规则"); //待抽取为常量
+        }
+        //数据校验end
+
+        /**
+         * 批量插入 待写
+         */
+        return null;
+    }
 }
-
-
-
-
