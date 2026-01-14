@@ -58,8 +58,15 @@ public class UserController {
         return Result.success(jwt);
     }
 
+    @GetMapping
+    public Result<User> getOneUser(User conditions) {
+        User res = userService.getOneUser(conditions);
+        return Result.success(res);
+    }
+
     @PostMapping("/list")
     public Result addUsers(UsersAddDto usersAddDto) {
-        return Result.success(null);
+        userService.usersAdd(usersAddDto);
+        return Result.success(null, "添加成功");
     }
 }

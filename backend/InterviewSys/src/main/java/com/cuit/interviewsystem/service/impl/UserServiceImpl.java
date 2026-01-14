@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
@@ -126,9 +127,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         return user;
     }
-
+    @Transactional
     @Override
-    public UsersAddDto usersAdd(UsersAddDto usersAddDto) {
+    public boolean usersAdd(UsersAddDto usersAddDto) {
         ThrowUtil.throwIfTure(
                 ObjUtil.isEmpty(usersAddDto)
                         || ObjUtil.isEmpty(usersAddDto.getCnt())
@@ -172,8 +173,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //数据校验end
 
         /**
-         * 批量插入 待写
+         * 批量插入
+         * saveBatch()方法会自动将传入的List<User>中的User对象插入到数据库中
          */
-        return null;
+        boolean b = this.saveBatch(usersAddDto.getList());
+        ThrowUtil.throwIfTure(!b, new BusinessException(ErrorEnum.SYSTEM_ERROR, "用户批量插入失败"));
+        return true;
+    }
+
+    @Override
+    public User getOneUser(User user) {
+        ThrowUtil.throwIfTure(
+                ObjUtil.isEmpty(user),
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<User>();
+        lambdaQueryWrapper.eq(user.getUserId() != null, User::getUserId, user.getUserId())
+                .or().eq(user.getUsername() != null, User::getUsername, user.getUsername())
+                .or().eq(user.getPhone() != null, User::getPhone, user.getPhone())
+                .or().eq(user.getPhone() != null, User::getEmail, user.getEmail());
+        User one = userMapper.selectOne(lambdaQueryWrapper);
+        return one;
     }
 }

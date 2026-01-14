@@ -5,7 +5,6 @@ import com.cuit.interviewsystem.model.dto.UserRegisterDto;
 import com.cuit.interviewsystem.model.dto.UsersAddDto;
 import com.cuit.interviewsystem.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cuit.interviewsystem.model.vo.UsersAddVo;
 
 /**
 * @author jiefe
@@ -17,5 +16,7 @@ public interface UserService extends IService<User> {
 
     User login(UserLoginDto userLoginDto);
 
-    UsersAddDto usersAdd(UsersAddDto usersAddDto);
+    boolean usersAdd(UsersAddDto usersAddDto);
+
+    User getOneUser(User user);
 }
