@@ -1,0 +1,54 @@
+package com.cuit.interviewsystem.aop;
+
+
+import com.cuit.interviewsystem.annotation.AuthCheck;
+import com.cuit.interviewsystem.exception.ErrorEnum;
+import com.cuit.interviewsystem.model.enums.UserRoleEnum;
+import com.cuit.interviewsystem.service.UserService;
+import com.cuit.interviewsystem.utils.JWTUtil;
+import com.cuit.interviewsystem.utils.ThrowUtil;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
+@Aspect
+@Component
+public class AuthCheckInterceptor {
+    @Resource
+    private UserService userService;
+
+    /**
+     * 执行拦截
+     *
+     * @param joinPoint 切入点
+     * @param authCheck 权限校验注解
+     */
+    @Around("@annotation(authCheck)")
+    public Object doInterceptor(ProceedingJoinPoint joinPoint, AuthCheck authCheck) throws Throwable {
+        String mustRole = authCheck.role();
+        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
+        String token = request.getHeader("token");
+
+        UserRoleEnum mustRoleEnum = UserRoleEnum.getEnumByValue(mustRole);
+        // 如果不需要权限，放行
+        if (mustRoleEnum == null) {
+            return joinPoint.proceed();
+        }
+        // 以下的代码：必须有权限，才会通过
+        // token为空或校验不通过
+        ThrowUtil.throwIfTure(token == null || JWTUtil.verify(token), ErrorEnum.NOT_LOGIN_ERROR);
+        UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(JWTUtil.parse(token, JWTUtil.ELEMENT_ROLE));
+        // 要求权限与登录用户的权限不同
+        //TODO 可能存在多种角色访问同一接口的情况
+        ThrowUtil.throwIfTure(!mustRoleEnum.equals(userRoleEnum), ErrorEnum.UNAUTHORIZED);
+        // 通过权限校验，放行
+        return joinPoint.proceed();
+    }
+}

@@ -9,7 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import java.util.Date;
 
 public class JWTUtil {
-
+    public static final String ELEMENT_ROLE = "role";
+    public static final String ELEMENT_USER_ID = "userId";
+    public static final String ELEMENT_COMPANY_ID = "companyId";
 
     @Value("${const-var.jwt.secret-key}")
     private static String JWT_SECRET_KEY;
@@ -19,9 +21,9 @@ public class JWTUtil {
     public static String sign(User user){
         Date expireDate = DateUtil.offsetDay(DateUtil.date(), JWT_EXP_OFFSET);
         return JWT.create()
-                .setPayload("userId", user.getUserId())
-                .setPayload("role", user.getRole())
-                .setPayload("companyId", user.getCompanyId())
+                .setPayload(ELEMENT_USER_ID, user.getUserId())
+                .setPayload(ELEMENT_ROLE, user.getRole())
+                .setPayload(ELEMENT_COMPANY_ID, user.getCompanyId())
                 .setExpiresAt(expireDate)
                 .setKey(JWT_SECRET_KEY.getBytes())
                 .sign();
@@ -34,10 +36,10 @@ public class JWTUtil {
         return JWT.of(token).setKey(JWT_SECRET_KEY.getBytes()).verify();
     }
 
-    public static String parse(String token, String name){
+    public static String parse(String token, String eleName){
         String res = null;
         if (verify(token)){
-            res = JWT.of(token).getPayload(name).toString();
+            res = JWT.of(token).getPayload(eleName).toString();
         }
         return res;
     }

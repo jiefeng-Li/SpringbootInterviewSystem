@@ -7,6 +7,7 @@ public enum ErrorEnum {
     SUCCESS(200, "ok"),
     PARAMS_ERROR(400, "请求参数错误"),
     NOT_LOGIN_ERROR(401, "未登录"),
+    UNAUTHORIZED(401, "权限不足"),
     NOT_FOUND_ERROR(404, "请求数据不存在"),
     SYSTEM_ERROR(500, "系统内部异常");
 

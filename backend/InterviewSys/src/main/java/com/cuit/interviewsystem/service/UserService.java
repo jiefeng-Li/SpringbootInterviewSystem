@@ -19,4 +19,10 @@ public interface UserService extends IService<User> {
     boolean usersAdd(UsersAddDto usersAddDto);
 
     User getOneUser(User user);
+
+    long addOneUser(User user);
+
+    int deleteOneUserById(Long id);
+
+    int updateOneUser(Long id, User user);
 }

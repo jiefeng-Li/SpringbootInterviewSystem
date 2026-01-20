@@ -54,6 +54,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public long sysAdminRegister(UserRegisterDto userRegisterDto) {
+        //region 数据校验
         ThrowUtil.throwIfTure(
                 ObjUtil.isEmpty(userRegisterDto),
                 new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
@@ -80,6 +81,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 ErrorEnum.PARAMS_ERROR.getCode(),
                 "用户名/手机号已存在"
         );
+        //endregion
         //创建用户对象
         User admin = new User();
         BeanUtils.copyProperties(userRegisterDto, admin);
@@ -130,6 +132,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Transactional
     @Override
     public boolean usersAdd(UsersAddDto usersAddDto) {
+        //TODO 待重构
         ThrowUtil.throwIfTure(
                 ObjUtil.isEmpty(usersAddDto)
                         || ObjUtil.isEmpty(usersAddDto.getCnt())
@@ -190,8 +193,96 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         lambdaQueryWrapper.eq(user.getUserId() != null, User::getUserId, user.getUserId())
                 .or().eq(user.getUsername() != null, User::getUsername, user.getUsername())
                 .or().eq(user.getPhone() != null, User::getPhone, user.getPhone())
-                .or().eq(user.getPhone() != null, User::getEmail, user.getEmail());
-        User one = userMapper.selectOne(lambdaQueryWrapper);
-        return one;
+                .or().eq(user.getEmail() != null, User::getEmail, user.getEmail())
+                .or().eq(user.getAccountStatus() != null, User::getAccountStatus, user.getAccountStatus())
+                .or().eq(user.getIsDeleted() != null, User::getIsDeleted, user.getIsDeleted())
+                .or().eq(user.getCompanyId() != null, User::getCompanyId, user.getCompanyId());
+        return userMapper.selectOne(lambdaQueryWrapper);
+    }
+
+    @Override
+    public long addOneUser(User user) {
+        //region 数据校验
+        ThrowUtil.throwIfTure(
+                ObjUtil.isEmpty(user),
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
+        //密码长度在8-20，只包含且至少包含一个数字字母与一个数字，
+        ThrowUtil.throwIfTure(
+                !user.getPassword().matches(PASSWORD_MATCH_RULE),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "密码不符合规则"); //待抽取为常量
+        ThrowUtil.throwIfTure(
+                StrUtil.isBlankIfStr(user.getUsername()),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "用户名不能为空");
+        ThrowUtil.throwIfTure(
+                !PhoneUtil.isPhone(user.getPhone()),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "请输入正确的手机号");
+        ThrowUtil.throwIfTure(
+                userMapper.exists(new LambdaQueryWrapper<User>()
+                        .eq(User::getPhone, user.getPhone())
+                        .eq(User::getUsername, user.getUsername())),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "用户名/手机号已存在"
+        );
+        //以上同系统用户注册的数据校验
+        ThrowUtil.throwIfTure(
+                ObjUtil.isEmpty(user.getRole()),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "用户角色不能为空"
+        );
+        //endregion
+        //密码加密
+        user.setPassword(digester.digestHex(user.getPassword() + SALT));
+        //插入数据库
+        long userId = userMapper.insert(user);
+        //返回用户id
+        return userId;
+    }
+
+    @Override
+    public int deleteOneUserById(Long id) {
+        ThrowUtil.throwIfTure(id  == null || id <= 0,
+                ErrorEnum.PARAMS_ERROR);
+        return userMapper.deleteById(id);
+    }
+
+    @Override
+    public int updateOneUser(Long id, User user) {
+        ThrowUtil.throwIfTure(id == null,
+                ErrorEnum.PARAMS_ERROR.getCode(), "路径请求参数为空");
+        ThrowUtil.throwIfTure(
+                ObjUtil.isEmpty(user),
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
+        ThrowUtil.throwIfTure(!id.equals(user.getUserId()),
+                ErrorEnum.PARAMS_ERROR.getCode(), "路径参数与请求体数据不匹配");
+        ThrowUtil.throwIfTure(
+                !user.getPassword().matches(PASSWORD_MATCH_RULE),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "密码不符合规则");
+        ThrowUtil.throwIfTure(
+                StrUtil.isBlankIfStr(user.getUsername()),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "用户名不能为空");
+        ThrowUtil.throwIfTure(
+                !PhoneUtil.isPhone(user.getPhone()),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "请输入正确的手机号");
+        //TODO 校验邮箱
+        ThrowUtil.throwIfTure(
+                userMapper.exists(new LambdaQueryWrapper<User>()
+                                .ne(User::getUserId, user.getUserId())
+                                .and(i -> i.eq(User::getUsername, user.getUsername())
+                                        .or().eq(User::getPhone, user.getPhone())
+                                        .or().eq(!StrUtil.isBlankIfStr(user.getEmail()), User::getEmail, user.getEmail()))),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "用户名/手机号/邮箱已存在"
+        );
+        user.setPassword(digester.digestHex(user.getPassword() + SALT));
+        user.setUpdateTime(new Date());
+        //TODO 获取当前操作用户，若为管理员则需要修改editTime字段
+        //TODO 权限校验，若权限不足则无法修改用户角色字段。
+        return 0;
     }
 }
