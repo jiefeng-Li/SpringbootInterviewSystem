@@ -9,6 +9,7 @@ import com.cuit.interviewsystem.utils.JWTUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -17,11 +18,16 @@ import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Arrays;
+import java.util.List;
+
 @Aspect
-@Component
+@Slf4j
 public class AuthCheckInterceptor {
     @Resource
     private UserService userService;
+    @Resource
+    private JWTUtil jwtUtil;
 
     /**
      * 执行拦截
@@ -31,23 +37,23 @@ public class AuthCheckInterceptor {
      */
     @Around("@annotation(authCheck)")
     public Object doInterceptor(ProceedingJoinPoint joinPoint, AuthCheck authCheck) throws Throwable {
-        String mustRole = authCheck.role();
+        List<UserRoleEnum> mustRoles = Arrays.stream(authCheck.roles()).toList();
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         String token = request.getHeader("token");
-
-        UserRoleEnum mustRoleEnum = UserRoleEnum.getEnumByValue(mustRole);
+        log.info("token:{}", token);
         // 如果不需要权限，放行
-        if (mustRoleEnum == null) {
+        if (mustRoles.isEmpty()) {
             return joinPoint.proceed();
         }
         // 以下的代码：必须有权限，才会通过
         // token为空或校验不通过
-        ThrowUtil.throwIfTure(token == null || JWTUtil.verify(token), ErrorEnum.NOT_LOGIN_ERROR);
-        UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(JWTUtil.parse(token, JWTUtil.ELEMENT_ROLE));
+        ThrowUtil.throwIfTure(token == null || jwtUtil.verify(token), ErrorEnum.NOT_LOGIN_ERROR);
+        UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(jwtUtil.parse(token, JWTUtil.ELEMENT_ROLE));
         // 要求权限与登录用户的权限不同
-        //TODO 可能存在多种角色访问同一接口的情况
-        ThrowUtil.throwIfTure(!mustRoleEnum.equals(userRoleEnum), ErrorEnum.UNAUTHORIZED);
+        //可能存在多种角色访问同一接口的情况
+        ThrowUtil.throwIfTure(!UserRoleEnum.SYS_ADMIN.equals(userRoleEnum)
+                || !mustRoles.contains(userRoleEnum), ErrorEnum.UNAUTHORIZED);
         // 通过权限校验，放行
         return joinPoint.proceed();
     }

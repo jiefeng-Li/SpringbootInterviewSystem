@@ -54,23 +54,33 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
-
+        <!--region hutool https://doc.hutool.cn/pages/index/  -->
         <dependency>
             <groupId>cn.hutool</groupId>
             <artifactId>hutool-all</artifactId>
             <version>5.8.38</version>
         </dependency>
+        <!--endregion    -->
+        <!--region mybatis-plus https://baomidou.com/introduce/  -->
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <version>3.5.15</version>
         </dependency>
+        <!--endregion  -->
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
             <version>1.9.7</version>
         </dependency>
 
+        <!--region knife4j https://doc.xiaominfo.com/docs/quick-start  -->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <version>4.4.0</version>
+        </dependency>
+        <!--endregion-->
     </dependencies>
 
     <build>

@@ -4,6 +4,7 @@ package com.cuit.interviewsystem.controller;
 import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
+import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.model.dto.UserLoginDto;
@@ -27,18 +28,24 @@ import java.util.Objects;
 @Slf4j
 @RestController
 @RequestMapping("/user")
+//@Tag(name = "用户管理")
+//TODO springboot4.0引入knife4j 似乎有版本冲突
 public class UserController {
     @Resource
     private UserService userService;
+    @Resource
+    private JWTUtil jwtUtil;
 
 
+//    @Operation(summary = "用户注册")
     @PostMapping("/register")
     public Result<Long> sysAdminRegister(UserRegisterDto userRegisterDto) {
         long userId = userService.sysAdminRegister(userRegisterDto);
         return Result.success(userId);
     }
-
+//    @Operation(summary = "用户登录")
     @GetMapping("/login")
+    @AuthCheck
     public Result<String> login(UserLoginDto userLoginDto) {
         User user = userService.login(userLoginDto);
         if (ObjUtil.isEmpty(user)) {
@@ -53,12 +60,13 @@ public class UserController {
         if (Objects.equals(user.getAccountStatus(), UserAccountStatusEnum.LOCKED.getStatus())) {
             return Result.error(ErrorEnum.PARAMS_ERROR, "该用户已被锁定");
         }
-        String jwt = JWTUtil.sign(user);
+        String jwt = jwtUtil.sign(user);
         ThrowUtil.throwIfTure(StrUtil.isBlankIfStr(jwt),
                 ErrorEnum.SYSTEM_ERROR.getCode(), "JWT创建失败");
         return Result.success(jwt);
     }
 
+//    @Operation(summary = "根据组合条件获取一个用户")
     @GetMapping
     public Result<UserVo> getOneUser(User conditions) {
         User res = userService.getOneUser(conditions);
@@ -74,6 +82,7 @@ public class UserController {
         return Result.success(resVo);
     }
 
+//    @Operation(summary = "批量添加用户 # 待重构")
     @PostMapping("/list")
     public Result addUsers(UsersAddDto usersAddDto) {
         //TODO 不太符合实际应用场景，待修改为使用excel添加
@@ -81,7 +90,9 @@ public class UserController {
         return Result.success(null, "添加成功");
     }
 
+//    @Operation(summary = "添加一个用户")
     @PostMapping("")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result<Long> addOneUser(User user) {
         long id = userService.addOneUser(user);
         if (id <= 0)
@@ -89,7 +100,9 @@ public class UserController {
         return Result.success(null, "添加成功");
     }
 
+//    @Operation(summary = "根据id(userId)删除一个用户")
     @DeleteMapping("/{id}")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
     public Result deleteOneUser(@PathVariable Long id) {
         int i = userService.deleteOneUserById(id);
         if (i == 0)
@@ -97,10 +110,13 @@ public class UserController {
         return Result.success(i, "删除成功");
     }
 
-
+//    @Operation(summary = "根据id(userId)更新一个用户")
     @PutMapping({"/{id}"})
+    @AuthCheck()
     public Result updateOneUser(@PathVariable Long id, @RequestBody User user) {
-        userService.updateOneUser(id, user);
+        int cnt = userService.updateOneUser(id, user);
+        if (cnt == 0)
+            return Result.error(ErrorEnum.NOT_FOUND_ERROR.getCode(), "更新失败，用户不存在");
         return Result.success(null);
     }
 }

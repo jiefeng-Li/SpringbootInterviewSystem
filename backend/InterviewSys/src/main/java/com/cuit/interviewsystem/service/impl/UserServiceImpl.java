@@ -16,16 +16,23 @@ import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.mapper.UserMapper;
+import com.cuit.interviewsystem.utils.JWTUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -38,6 +45,8 @@ import java.util.concurrent.CompletableFuture;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private JWTUtil jwtUtil;
 
     private Digester digester = new Digester(DigestAlgorithm.SHA512);
 
@@ -203,6 +212,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public long addOneUser(User user) {
         //region 数据校验
+        //TODO 有bug
         ThrowUtil.throwIfTure(
                 ObjUtil.isEmpty(user),
                 new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
@@ -242,10 +252,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public int deleteOneUserById(Long id) {
-        ThrowUtil.throwIfTure(id  == null || id <= 0,
+    public int deleteOneUserById(Long delUserId) {
+        ThrowUtil.throwIfTure(delUserId  == null || delUserId <= 0,
                 ErrorEnum.PARAMS_ERROR);
-        return userMapper.deleteById(id);
+        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
+        String token = request.getHeader("token");
+        UserRoleEnum optRole = UserRoleEnum.getEnumByValue(jwtUtil.parse(token, JWTUtil.ELEMENT_ROLE));
+        User delUser = userMapper.selectById(delUserId);
+        User optUser = userMapper.selectById(jwtUtil.parse(token, JWTUtil.ELEMENT_USER_ID));
+        if (UserRoleEnum.COMP_ADMIN.equals(optRole)) {
+            ThrowUtil.throwIfTure(ObjUtil.isEmpty(delUser),
+                    ErrorEnum.PARAMS_ERROR.getCode(), "用户不存在");
+            ThrowUtil.throwIfTure(!Objects.equals(optUser.getCompanyId(), delUser.getCompanyId()),
+                    ErrorEnum.PARAMS_ERROR.getCode(), "无权限删除该用户");
+        }
+        return userMapper.deleteById(delUserId);
     }
 
     @Override
@@ -272,17 +294,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //TODO 校验邮箱
         ThrowUtil.throwIfTure(
                 userMapper.exists(new LambdaQueryWrapper<User>()
-                                .ne(User::getUserId, user.getUserId())
-                                .and(i -> i.eq(User::getUsername, user.getUsername())
-                                        .or().eq(User::getPhone, user.getPhone())
-                                        .or().eq(!StrUtil.isBlankIfStr(user.getEmail()), User::getEmail, user.getEmail()))),
+                        .ne(User::getUserId, user.getUserId())
+                        .and(i -> i.eq(User::getUsername, user.getUsername())
+                                .or().eq(User::getPhone, user.getPhone())
+                                .or().eq(!StrUtil.isBlankIfStr(user.getEmail()), User::getEmail, user.getEmail()))),
                 ErrorEnum.PARAMS_ERROR.getCode(),
                 "用户名/手机号/邮箱已存在"
         );
         user.setPassword(digester.digestHex(user.getPassword() + SALT));
         user.setUpdateTime(new Date());
-        //TODO 获取当前操作用户，若为管理员则需要修改editTime字段
-        //TODO 权限校验，若权限不足则无法修改用户角色字段。
-        return 0;
+        //获取当前操作用户，若为管理员则需要修改editTime字段
+        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
+        String token = request.getHeader("token");
+        String role = jwtUtil.parse(token, JWTUtil.ELEMENT_ROLE);
+        if (UserRoleEnum.SYS_ADMIN.equals(UserRoleEnum.getEnumByValue(role))) {
+            user.setEditTime(new Date());
+        } else {
+            //权限校验，若权限不足则无法修改用户角色字段。
+            User old = userMapper.selectById(id);
+            ThrowUtil.throwIfTure(
+                    !Objects.equals(UserRoleEnum.getEnumByValue(old.getRole()),
+                            UserRoleEnum.getEnumByValue(user.getRole())), ErrorEnum.UNAUTHORIZED);
+        }
+        return userMapper.updateById(user);
     }
 }
