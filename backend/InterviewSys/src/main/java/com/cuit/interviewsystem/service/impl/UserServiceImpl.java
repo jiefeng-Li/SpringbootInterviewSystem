@@ -63,34 +63,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     @Override
     public long sysAdminRegister(UserRegisterDto userRegisterDto) {
-        //region 数据校验
-        ThrowUtil.throwIfTure(
-                ObjUtil.isEmpty(userRegisterDto),
-                new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
-        //密码长度在8-20，只包含且至少包含一个数字字母与一个数字，
-        ThrowUtil.throwIfTure(
-                !userRegisterDto.getPassword().matches(PASSWORD_MATCH_RULE),
-                ErrorEnum.PARAMS_ERROR.getCode(),
-                "密码不符合规则"); //待抽取为常量
-
-        ThrowUtil.throwIfTure(
-                StrUtil.isBlankIfStr(userRegisterDto.getUsername()),
-                ErrorEnum.PARAMS_ERROR.getCode(),
-                "用户名不能为空");
-
-        ThrowUtil.throwIfTure(
-                !PhoneUtil.isPhone(userRegisterDto.getPhone()),
-                ErrorEnum.PARAMS_ERROR.getCode(),
-                "请输入正确的手机号");
-
-        ThrowUtil.throwIfTure(
-                userMapper.exists(new LambdaQueryWrapper<User>()
-                        .eq(User::getPhone, userRegisterDto.getPhone())
-                        .eq(User::getUsername, userRegisterDto.getUsername())),
-                ErrorEnum.PARAMS_ERROR.getCode(),
-                "用户名/手机号已存在"
-        );
-        //endregion
+        //数据校验
+        this.objectCheck(userRegisterDto);
         //创建用户对象
         User admin = new User();
         BeanUtils.copyProperties(userRegisterDto, admin);
@@ -104,6 +78,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("userid is {}", userId);
         //返回用户id
         return userId;
+    }
+
+    @Override
+    public long compUserRegister(UserRegisterDto userRegisterDto) {
+        this.objectCheck(userRegisterDto);
+        //创建用户对象
+        User compUser = new User();
+        BeanUtils.copyProperties(userRegisterDto, compUser);
+        //设置角色
+        compUser.setRole(UserRoleEnum.RECRUITER.getValue());
+        //密码加密
+        compUser.setPassword(digester.digestHex(compUser.getPassword() + SALT));
+        //插入数据库
+        return userMapper.insert(compUser);
+    }
+
+    @Override
+    public long commonUserRegister(UserRegisterDto userRegisterDto) {
+        this.objectCheck(userRegisterDto);
+        //创建用户对象
+        User commonUser = new User();
+        BeanUtils.copyProperties(userRegisterDto, commonUser);
+        //设置角色
+        commonUser.setRole(UserRoleEnum.JOB_SEEKER.getValue());
+        //密码加密
+        commonUser.setPassword(digester.digestHex(commonUser.getPassword() + SALT));
+        //插入数据库
+        return userMapper.insert(commonUser);
     }
 
     /**
@@ -212,27 +214,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public long addOneUser(User user) {
         //region 数据校验
-        //TODO 有bug
         ThrowUtil.throwIfTure(
                 ObjUtil.isEmpty(user),
                 new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
-        //密码长度在8-20，只包含且至少包含一个数字字母与一个数字，
-        ThrowUtil.throwIfTure(
-                !user.getPassword().matches(PASSWORD_MATCH_RULE),
-                ErrorEnum.PARAMS_ERROR.getCode(),
-                "密码不符合规则"); //待抽取为常量
         ThrowUtil.throwIfTure(
                 StrUtil.isBlankIfStr(user.getUsername()),
                 ErrorEnum.PARAMS_ERROR.getCode(),
                 "用户名不能为空");
+        //密码长度在8-20，只包含且至少包含一个数字字母与一个数字
+        ThrowUtil.throwIfTure(
+                StrUtil.isBlankIfStr(user.getPassword()) || !user.getPassword().matches(PASSWORD_MATCH_RULE),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "密码不符合规则"); //待抽取为常量
+
         ThrowUtil.throwIfTure(
                 !PhoneUtil.isPhone(user.getPhone()),
                 ErrorEnum.PARAMS_ERROR.getCode(),
                 "请输入正确的手机号");
+
         ThrowUtil.throwIfTure(
                 userMapper.exists(new LambdaQueryWrapper<User>()
                         .eq(User::getPhone, user.getPhone())
-                        .eq(User::getUsername, user.getUsername())),
+                        .or().eq(User::getUsername, user.getUsername())
+                        .or().eq(!StrUtil.isBlankIfStr(user.getEmail()), User::getEmail, user.getEmail())),
                 ErrorEnum.PARAMS_ERROR.getCode(),
                 "用户名/手机号已存在"
         );
@@ -242,7 +246,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 ErrorEnum.PARAMS_ERROR.getCode(),
                 "用户角色不能为空"
         );
+        //根据传入的角色找到对应的UserRoleEnum，不存在valueRole和textRole都不为空的情况
+        UserRoleEnum valueRole = UserRoleEnum.getEnumByValue(user.getRole());
+        UserRoleEnum textRole = UserRoleEnum.getEnumByText(user.getRole());
+        ThrowUtil.throwIfTure(
+                valueRole == null && textRole == null,
+                ErrorEnum.PARAMS_ERROR.getCode(), "用户角色不存在"
+                );
         //endregion
+        //规范存储UserRoleEnum的value值
+        user.setRole(valueRole == null ? textRole.getValue() : valueRole.getValue());
         //密码加密
         user.setPassword(digester.digestHex(user.getPassword() + SALT));
         //插入数据库
@@ -318,5 +331,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                             UserRoleEnum.getEnumByValue(user.getRole())), ErrorEnum.UNAUTHORIZED);
         }
         return userMapper.updateById(user);
+    }
+
+    private void objectCheck(UserRegisterDto userRegisterDto) {
+        //region 数据校验
+        ThrowUtil.throwIfTure(
+                ObjUtil.isEmpty(userRegisterDto),
+                new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
+        //密码长度在8-20，只包含且至少包含一个数字字母与一个数字，
+        ThrowUtil.throwIfTure(
+                !userRegisterDto.getPassword().matches(PASSWORD_MATCH_RULE),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "密码不符合规则"); //待抽取为常量
+
+        ThrowUtil.throwIfTure(
+                StrUtil.isBlankIfStr(userRegisterDto.getUsername()),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "用户名不能为空");
+
+        ThrowUtil.throwIfTure(
+                !PhoneUtil.isPhone(userRegisterDto.getPhone()),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "请输入正确的手机号");
+
+        ThrowUtil.throwIfTure(
+                userMapper.exists(new LambdaQueryWrapper<User>()
+                        .eq(User::getPhone, userRegisterDto.getPhone())
+                        .eq(User::getUsername, userRegisterDto.getUsername())),
+                ErrorEnum.PARAMS_ERROR.getCode(),
+                "用户名/手机号已存在"
+        );
+        //endregion
+    }
+
+    private boolean objectCheck(User user) {
+        return true;
     }
 }

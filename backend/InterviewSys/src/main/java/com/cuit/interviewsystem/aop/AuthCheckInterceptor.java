@@ -4,7 +4,6 @@ package com.cuit.interviewsystem.aop;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
-import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.utils.JWTUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
@@ -22,10 +21,9 @@ import java.util.Arrays;
 import java.util.List;
 
 @Aspect
+@Component
 @Slf4j
 public class AuthCheckInterceptor {
-    @Resource
-    private UserService userService;
     @Resource
     private JWTUtil jwtUtil;
 
@@ -48,7 +46,7 @@ public class AuthCheckInterceptor {
         }
         // 以下的代码：必须有权限，才会通过
         // token为空或校验不通过
-        ThrowUtil.throwIfTure(token == null || jwtUtil.verify(token), ErrorEnum.NOT_LOGIN_ERROR);
+        ThrowUtil.throwIfTure(token == null || !jwtUtil.verify(token), ErrorEnum.NOT_LOGIN_ERROR);
         UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(jwtUtil.parse(token, JWTUtil.ELEMENT_ROLE));
         // 要求权限与登录用户的权限不同
         //可能存在多种角色访问同一接口的情况

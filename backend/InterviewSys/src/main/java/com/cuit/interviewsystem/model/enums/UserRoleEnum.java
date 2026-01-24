@@ -29,4 +29,16 @@ public enum UserRoleEnum {
         }
         return null;
     }
+
+    public static UserRoleEnum getEnumByText(String text) {
+        if (ObjUtil.isEmpty(text)) {
+            return null;
+        }
+        for (UserRoleEnum u: UserRoleEnum.values()) {
+            if (u.text.equals(text)) {
+                return u;
+            }
+        }
+        return null;
+    }
 }

@@ -33,11 +33,6 @@ public class UserVo {
     private String phone;
 
     /**
-     * 密码
-     */
-    private String password;
-
-    /**
      * 头像URL
      */
     private String avatarUrl;

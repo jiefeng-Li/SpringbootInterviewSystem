@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -38,9 +40,21 @@ public class UserController {
 
 
 //    @Operation(summary = "用户注册")
-    @PostMapping("/register")
+    @PostMapping("/admin/register")
     public Result<Long> sysAdminRegister(UserRegisterDto userRegisterDto) {
         long userId = userService.sysAdminRegister(userRegisterDto);
+        return Result.success(userId);
+    }
+
+    @PostMapping("/comp/register")
+    public Result<Long> compUserRegister(UserRegisterDto userRegisterDto) {
+        long userId = userService.compUserRegister(userRegisterDto);
+        return Result.success(userId);
+    }
+
+    @PostMapping("/common/register")
+    public Result<Long> commonUserRegister(UserRegisterDto userRegisterDto) {
+        long userId = userService.commonUserRegister(userRegisterDto);
         return Result.success(userId);
     }
 //    @Operation(summary = "用户登录")
@@ -64,6 +78,17 @@ public class UserController {
         ThrowUtil.throwIfTure(StrUtil.isBlankIfStr(jwt),
                 ErrorEnum.SYSTEM_ERROR.getCode(), "JWT创建失败");
         return Result.success(jwt);
+    }
+
+
+    @GetMapping("/roles")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
+    public Result getUserRoles() {
+        record roles(String text, String value){}
+        List<roles> res = new ArrayList<>();
+        for (UserRoleEnum e : UserRoleEnum.values())
+            res.add(new roles(e.getText(), e.getValue()));
+        return Result.success(res);
     }
 
 //    @Operation(summary = "根据组合条件获取一个用户")
