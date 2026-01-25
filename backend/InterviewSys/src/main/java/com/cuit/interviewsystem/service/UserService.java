@@ -30,4 +30,6 @@ public interface UserService extends IService<User> {
 
     long compUserRegister(UserRegisterDto userRegisterDto);
     long commonUserRegister(UserRegisterDto userRegisterDto);
+
+    boolean accountCancellation(Long id);
 }

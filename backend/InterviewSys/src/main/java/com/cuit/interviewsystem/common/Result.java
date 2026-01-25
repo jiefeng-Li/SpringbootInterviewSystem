@@ -24,6 +24,10 @@ public class Result<T> {
         this(errorEnum.getCode(), null, errorEnum.getMessage());
     }
 
+    public static <T> Result<T> success() {
+        return new Result<>(ErrorEnum.SUCCESS.getCode(), null, "success");
+    }
+
     public static <T> Result<T> success(T data) {
         return new Result<>(ErrorEnum.SUCCESS.getCode(), data, "success");
     }

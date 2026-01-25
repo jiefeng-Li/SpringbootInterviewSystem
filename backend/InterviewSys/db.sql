@@ -17,9 +17,9 @@ CREATE TABLE `t_user` (
                           `edit_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '系统更新时间',
                           `company_id` bigint DEFAULT NULL COMMENT '用户所属公司ID',
                           PRIMARY KEY (`user_id`),
-                          UNIQUE INDEX idx_phone (`phone`),
-                          UNIQUE INDEX idx_username (`username`),
-                          UNIQUE INDEX idx_email (`email`)
+                          INDEX idx_phone (`phone`),
+                          INDEX idx_username (`username`),
+                          INDEX idx_email (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统用户表';
 
 -- 2. 创建公司基本信息表

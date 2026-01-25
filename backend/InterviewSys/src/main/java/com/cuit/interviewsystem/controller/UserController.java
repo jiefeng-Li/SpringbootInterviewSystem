@@ -3,7 +3,6 @@ package com.cuit.interviewsystem.controller;
 
 import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.ObjUtil;
-import cn.hutool.core.util.StrUtil;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.ErrorEnum;
@@ -16,7 +15,6 @@ import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.UserVo;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.utils.JWTUtil;
-import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -40,24 +38,50 @@ public class UserController {
 
 
 //    @Operation(summary = "用户注册")
+
+    /**
+     * 管理员用户注册
+     * @param userRegisterDto
+     * @return
+     */
     @PostMapping("/admin/register")
-    public Result<Long> sysAdminRegister(UserRegisterDto userRegisterDto) {
+    public Result sysAdminRegister(UserRegisterDto userRegisterDto) {
         long userId = userService.sysAdminRegister(userRegisterDto);
-        return Result.success(userId);
+        record userRecord(long userId){}
+        return Result.success(new userRecord(userId));
     }
 
+    /**
+     * 公司用户注册
+     * @param userRegisterDto
+     * @return
+     */
     @PostMapping("/comp/register")
     public Result<Long> compUserRegister(UserRegisterDto userRegisterDto) {
         long userId = userService.compUserRegister(userRegisterDto);
         return Result.success(userId);
     }
 
-    @PostMapping("/common/register")
+    /**
+     * 普通用户(求职者)注册
+     * @param userRegisterDto
+     * @return
+     */
+    //TODO 待重构为 JOB_SEEKER 与 RECRUITER 的通用注册
+    @PostMapping("/register")
     public Result<Long> commonUserRegister(UserRegisterDto userRegisterDto) {
         long userId = userService.commonUserRegister(userRegisterDto);
         return Result.success(userId);
     }
+
+
 //    @Operation(summary = "用户登录")
+
+    /**
+     * 通用用户登录
+     * @param userLoginDto
+     * @return
+     */
     @GetMapping("/login")
     @AuthCheck
     public Result<String> login(UserLoginDto userLoginDto) {
@@ -75,12 +99,14 @@ public class UserController {
             return Result.error(ErrorEnum.PARAMS_ERROR, "该用户已被锁定");
         }
         String jwt = jwtUtil.sign(user);
-        ThrowUtil.throwIfTure(StrUtil.isBlankIfStr(jwt),
-                ErrorEnum.SYSTEM_ERROR.getCode(), "JWT创建失败");
         return Result.success(jwt);
     }
 
 
+    /**
+     *
+     * @return 用户角色类型
+     */
     @GetMapping("/roles")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result getUserRoles() {
@@ -92,6 +118,12 @@ public class UserController {
     }
 
 //    @Operation(summary = "根据组合条件获取一个用户")
+
+    /**
+     * 通用 获取单个用户
+     * @param conditions
+     * @return
+     */
     @GetMapping
     public Result<UserVo> getOneUser(User conditions) {
         User res = userService.getOneUser(conditions);
@@ -108,6 +140,12 @@ public class UserController {
     }
 
 //    @Operation(summary = "批量添加用户 # 待重构")
+
+    /**
+     * 批量添加用户
+     * @param usersAddDto
+     * @return
+     */
     @PostMapping("/list")
     public Result addUsers(UsersAddDto usersAddDto) {
         //TODO 不太符合实际应用场景，待修改为使用excel添加
@@ -116,6 +154,12 @@ public class UserController {
     }
 
 //    @Operation(summary = "添加一个用户")
+
+    /**
+     * 管理员添加单个用户
+     * @param user
+     * @return
+     */
     @PostMapping("")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result<Long> addOneUser(User user) {
@@ -126,13 +170,31 @@ public class UserController {
     }
 
 //    @Operation(summary = "根据id(userId)删除一个用户")
-    @DeleteMapping("/{id}")
+
+    /**
+     * (系统、公司)管理员删除单个用户
+     * @param id
+     * @return
+     */
+    @DeleteMapping("/admin/{id}")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
     public Result deleteOneUser(@PathVariable Long id) {
         int i = userService.deleteOneUserById(id);
         if (i == 0)
             return Result.error(ErrorEnum.NOT_FOUND_ERROR.getCode(), "删除失败，用户不存在");
         return Result.success(i, "删除成功");
+    }
+
+    /**
+     * 通用用户注销账号
+     * @param id
+     * @return
+     */
+    @DeleteMapping("/common/{id}")
+    //TODO 待重构 accountCancellation 与 deleteOneUser 合并
+    public Result accountCancellation(@PathVariable Long id) {
+        userService.accountCancellation(id);
+        return Result.success();
     }
 
 //    @Operation(summary = "根据id(userId)更新一个用户")
