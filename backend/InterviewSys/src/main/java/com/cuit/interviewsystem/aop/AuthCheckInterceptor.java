@@ -3,6 +3,8 @@ package com.cuit.interviewsystem.aop;
 
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.exception.ErrorEnum;
+import com.cuit.interviewsystem.mapper.UserMapper;
+import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.utils.JWTUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
@@ -26,6 +28,8 @@ import java.util.List;
 public class AuthCheckInterceptor {
     @Resource
     private JWTUtil jwtUtil;
+    @Resource
+    private UserMapper userMapper;
 
     /**
      * 执行拦截
@@ -52,6 +56,15 @@ public class AuthCheckInterceptor {
         //可能存在多种角色访问同一接口的情况
         ThrowUtil.throwIfTure(!UserRoleEnum.SYS_ADMIN.equals(userRoleEnum)
                 || !mustRoles.contains(userRoleEnum), ErrorEnum.UNAUTHORIZED);
+        //如果用户账号状态不为NORMAL则不通过
+        ThrowUtil.throwIfTure(
+                !UserAccountStatusEnum.NORMAL.equals(
+                        UserAccountStatusEnum.getEnumByStatus(
+                                userMapper.selectById(
+                                        jwtUtil.parse(token, JWTUtil.ELEMENT_USER_ID))
+                                        .getAccountStatus()))
+                , ErrorEnum.NOT_LOGIN_ERROR.getCode(),
+                "账号被冻结或封禁");
         // 通过权限校验，放行
         return joinPoint.proceed();
     }

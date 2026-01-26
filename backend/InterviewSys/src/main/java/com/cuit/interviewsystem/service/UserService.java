@@ -1,6 +1,7 @@
 package com.cuit.interviewsystem.service;
 
 import com.cuit.interviewsystem.common.Result;
+import com.cuit.interviewsystem.model.dto.CommonUserRegister;
 import com.cuit.interviewsystem.model.dto.UserLoginDto;
 import com.cuit.interviewsystem.model.dto.UserRegisterDto;
 import com.cuit.interviewsystem.model.dto.UsersAddDto;
@@ -29,7 +30,5 @@ public interface UserService extends IService<User> {
     int updateOneUser(Long id, User user);
 
     long compUserRegister(UserRegisterDto userRegisterDto);
-    long commonUserRegister(UserRegisterDto userRegisterDto);
-
-    boolean accountCancellation(Long id);
+    long commonUserRegister(CommonUserRegister cur);
 }

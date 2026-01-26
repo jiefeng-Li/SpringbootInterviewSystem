@@ -6,6 +6,7 @@ import cn.hutool.core.util.ObjUtil;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.ErrorEnum;
+import com.cuit.interviewsystem.model.dto.CommonUserRegister;
 import com.cuit.interviewsystem.model.dto.UserLoginDto;
 import com.cuit.interviewsystem.model.dto.UserRegisterDto;
 import com.cuit.interviewsystem.model.dto.UsersAddDto;
@@ -64,13 +65,13 @@ public class UserController {
 
     /**
      * 普通用户(求职者)注册
-     * @param userRegisterDto
+     * @param  cur
      * @return
      */
     //TODO 待重构为 JOB_SEEKER 与 RECRUITER 的通用注册
     @PostMapping("/register")
-    public Result<Long> commonUserRegister(UserRegisterDto userRegisterDto) {
-        long userId = userService.commonUserRegister(userRegisterDto);
+    public Result<Long> commonUserRegister(CommonUserRegister cur) {
+        long userId = userService.commonUserRegister(cur);
         return Result.success(userId);
     }
 
@@ -114,6 +115,16 @@ public class UserController {
         List<roles> res = new ArrayList<>();
         for (UserRoleEnum e : UserRoleEnum.values())
             res.add(new roles(e.getText(), e.getValue()));
+        return Result.success(res);
+    }
+
+    @GetMapping("/status")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
+    public Result getUserStatus() {
+        record statusRecord(int status, String text){}
+        List<statusRecord> res = new ArrayList<>();
+        for (UserAccountStatusEnum e : UserAccountStatusEnum.values())
+            res.add(new statusRecord(e.getStatus(), e.getText()));
         return Result.success(res);
     }
 
@@ -177,7 +188,8 @@ public class UserController {
      * @return
      */
     @DeleteMapping("/admin/{id}")
-    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN,
+            UserRoleEnum.RECRUITER, UserRoleEnum.JOB_SEEKER})
     public Result deleteOneUser(@PathVariable Long id) {
         int i = userService.deleteOneUserById(id);
         if (i == 0)
@@ -190,12 +202,6 @@ public class UserController {
      * @param id
      * @return
      */
-    @DeleteMapping("/common/{id}")
-    //TODO 待重构 accountCancellation 与 deleteOneUser 合并
-    public Result accountCancellation(@PathVariable Long id) {
-        userService.accountCancellation(id);
-        return Result.success();
-    }
 
 //    @Operation(summary = "根据id(userId)更新一个用户")
     @PutMapping({"/{id}"})
