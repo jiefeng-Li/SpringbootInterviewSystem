@@ -67,6 +67,12 @@
             <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <version>3.5.15</version>
         </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser</artifactId>
+            <version>3.5.15</version>
+            <scope>compile</scope>
+        </dependency>
         <!--endregion  -->
         <dependency>
             <groupId>org.aspectj</groupId>

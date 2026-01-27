@@ -1,6 +1,8 @@
 package com.cuit.interviewsystem.model.enums;
 
 
+import com.cuit.interviewsystem.exception.BusinessException;
+import com.cuit.interviewsystem.exception.ErrorEnum;
 import lombok.Getter;
 
 @Getter
@@ -27,5 +29,27 @@ public enum UserAccountStatusEnum {
             }
         }
         return null;
+    }
+
+    public static UserAccountStatusEnum getEnumByText(String text) {
+        for (UserAccountStatusEnum statusEnum : UserAccountStatusEnum.values()) {
+            if (statusEnum.getText().equals(text)) {
+                return statusEnum;
+            }
+        }
+        return null;
+    }
+
+    public static UserAccountStatusEnum getEnum(String str) {
+        UserAccountStatusEnum res = getEnumByText(str);
+        try {
+            if (res == null) {
+                int i = Integer.parseInt(str);
+                res = getEnumByStatus(i);
+            }
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorEnum.PARAMS_ERROR, "账号状态参数错误");
+        }
+        return res;
     }
 }

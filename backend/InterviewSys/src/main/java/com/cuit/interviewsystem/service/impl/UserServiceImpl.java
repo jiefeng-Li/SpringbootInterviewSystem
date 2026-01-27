@@ -6,14 +6,14 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
-import com.cuit.interviewsystem.model.dto.CommonUserRegister;
-import com.cuit.interviewsystem.model.dto.UserLoginDto;
-import com.cuit.interviewsystem.model.dto.UserRegisterDto;
-import com.cuit.interviewsystem.model.dto.UsersAddDto;
+import com.cuit.interviewsystem.model.dto.*;
 import com.cuit.interviewsystem.model.entity.User;
+import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.mapper.UserMapper;
@@ -100,6 +100,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         u.setPassword(digester.digestHex(u.getPassword() + SALT));
         //插入数据库
         return userMapper.insert(u);
+    }
+
+    @Override
+    public Page<User> getUsers(UserPageDto conditions) {
+        Long pageSize = conditions.getPageSize();
+        Long pageNum = conditions.getPageNum();
+        // 校验数据
+        ThrowUtil.throwIfTure(conditions.getIsDeleted() == null ||
+                conditions.getIsDeleted() != 0 && conditions.getIsDeleted() != 1, ErrorEnum.PARAMS_ERROR);
+        ThrowUtil.throwIfTure(pageSize == null || pageNum == null || pageSize <= 0, ErrorEnum.PARAMS_ERROR);
+        ThrowUtil.throwIfTure(pageSize > 1000, ErrorEnum.PARAMS_ERROR.getCode(), "每页最多1000条数据");
+        Page<User> page = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        UserAccountStatusEnum status = UserAccountStatusEnum.getEnumByStatus(conditions.getAccountStatus());
+
+        lambdaQueryWrapper
+                //查询用户名不为空则模糊查询
+                .like(StrUtil.isNotBlank(conditions.getUsername()), User::getUsername, conditions.getUsername())
+                //查询邮箱的用户
+                .eq(StrUtil.isNotBlank(conditions.getEmail()), User::getEmail, conditions.getEmail())
+                //手机号查询
+                .eq(StrUtil.isNotBlank(conditions.getPhone()), User::getPhone, conditions.getPhone())
+                //查询指定账号状态
+                .eq(conditions.getAccountStatus() != null, User::getAccountStatus, conditions.getAccountStatus())
+                //查询指定公司
+                .eq(conditions.getCompanyId() != null, User::getCompanyId, conditions.getCompanyId())
+                //查询删除或已删除的用户 -- 必须指定
+                .eq(User::getIsDeleted, conditions.getIsDeleted());
+        UserRoleEnum role = UserRoleEnum.getRole(conditions.getRole());
+        if (role != null)
+            lambdaQueryWrapper.eq(User::getRole, role.getValue());
+        return userMapper.selectPage(page, lambdaQueryWrapper);
     }
 
     /**

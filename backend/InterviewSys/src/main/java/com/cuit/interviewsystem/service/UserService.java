@@ -1,13 +1,13 @@
 package com.cuit.interviewsystem.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.common.Result;
-import com.cuit.interviewsystem.model.dto.CommonUserRegister;
-import com.cuit.interviewsystem.model.dto.UserLoginDto;
-import com.cuit.interviewsystem.model.dto.UserRegisterDto;
-import com.cuit.interviewsystem.model.dto.UsersAddDto;
+import com.cuit.interviewsystem.model.dto.*;
 import com.cuit.interviewsystem.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.springframework.web.bind.annotation.PostMapping;
+
+import java.util.List;
 
 /**
 * @author jiefe
@@ -31,4 +31,6 @@ public interface UserService extends IService<User> {
 
     long compUserRegister(UserRegisterDto userRegisterDto);
     long commonUserRegister(CommonUserRegister cur);
+
+    Page<User> getUsers(UserPageDto conditions);
 }

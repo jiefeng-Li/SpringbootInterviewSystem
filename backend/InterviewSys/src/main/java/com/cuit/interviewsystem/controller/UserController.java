@@ -3,16 +3,15 @@ package com.cuit.interviewsystem.controller;
 
 import cn.hutool.core.util.DesensitizedUtil;
 import cn.hutool.core.util.ObjUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.ErrorEnum;
-import com.cuit.interviewsystem.model.dto.CommonUserRegister;
-import com.cuit.interviewsystem.model.dto.UserLoginDto;
-import com.cuit.interviewsystem.model.dto.UserRegisterDto;
-import com.cuit.interviewsystem.model.dto.UsersAddDto;
+import com.cuit.interviewsystem.model.dto.*;
 import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
+import com.cuit.interviewsystem.model.vo.PageVo;
 import com.cuit.interviewsystem.model.vo.UserVo;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.utils.JWTUtil;
@@ -68,7 +67,6 @@ public class UserController {
      * @param  cur
      * @return
      */
-    //TODO 待重构为 JOB_SEEKER 与 RECRUITER 的通用注册
     @PostMapping("/register")
     public Result<Long> commonUserRegister(CommonUserRegister cur) {
         long userId = userService.commonUserRegister(cur);
@@ -148,6 +146,30 @@ public class UserController {
             resVo.setRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(res.getRole())).getText());
         }
         return Result.success(resVo);
+    }
+
+    @GetMapping("/list")
+//    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
+    public Result<PageVo<UserVo>> getUsersByPage(UserPageDto conditions) {
+        Page<User> users = userService.getUsers(conditions);
+        List<User> records = users.getRecords();
+        List<UserVo> res = new ArrayList<>();
+        for (User u : records) {
+            UserVo userVo = new UserVo();
+            BeanUtils.copyProperties(u, userVo);
+            userVo.setPhone(DesensitizedUtil.mobilePhone(userVo.getPhone()));
+            userVo.setEmail(DesensitizedUtil.email(userVo.getEmail()));
+            userVo.setAccountStatus(UserAccountStatusEnum.getEnumByStatus(u.getAccountStatus()).getText());
+            userVo.setRole(UserRoleEnum.getEnumByValue(u.getRole()).getText());
+            res.add(userVo);
+        }
+        PageVo<UserVo> pageVo = new PageVo<>();
+        pageVo.setPageSize(users.getSize());
+        pageVo.setPages(users.getPages());
+        pageVo.setPageNum(users.getCurrent());
+        pageVo.setTotal(users.getTotal());
+        pageVo.setList(res);
+        return Result.success(pageVo);
     }
 
 //    @Operation(summary = "批量添加用户 # 待重构")
