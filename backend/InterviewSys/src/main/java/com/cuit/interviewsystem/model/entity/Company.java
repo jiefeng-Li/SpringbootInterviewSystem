@@ -16,22 +16,22 @@ public class Company {
      * 公司ID
      */
     @TableId(type = IdType.AUTO)
-    private Long company_id;
+    private Long companyId;
 
     /**
      * 企业管理员ID 对应用户表user_id
      */
-    private Long admin_id;
+    private Long adminId;
 
     /**
      * 公司全称
      */
-    private String company_name;
+    private String companyName;
 
     /**
      * Logo URL
      */
-    private String logo_url;
+    private String logoUrl;
 
     /**
      * 官网
@@ -66,26 +66,26 @@ public class Company {
     /**
      * 营业执照URL
      */
-    private String business_license_url;
+    private String businessLicenseUrl;
 
     /**
      * 逻辑删除
      */
     @TableLogic
-    private Integer is_deleted;
+    private Integer isDeleted;
 
     /**
      * 创建时间
      */
-    private Date create_time;
+    private Date createTime;
 
     /**
      * 更新时间
      */
-    private Date update_time;
+    private Date updateTime;
 
     /**
      * 系统更新时间
      */
-    private Date edit_time;
+    private Date editTime;
 }

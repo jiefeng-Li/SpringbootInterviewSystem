@@ -6,7 +6,9 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-
+const-var:
+  password-match-rule: ^(?=.*[0-9])(?=.*[a-zA-Z])[a-zA-Z0-9]{8,20}$
+  email-match-rule: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
 #knife4j:
 #  enable: true
 #  setting:
