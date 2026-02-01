@@ -6,7 +6,6 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
@@ -48,7 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Resource
     private JWTUtil jwtUtil;
 
-    private Digester digester = new Digester(DigestAlgorithm.SHA512);
+    private final Digester digester = new Digester(DigestAlgorithm.SHA512);
 
     @Value("${const-var.salt}")
     private String SALT;

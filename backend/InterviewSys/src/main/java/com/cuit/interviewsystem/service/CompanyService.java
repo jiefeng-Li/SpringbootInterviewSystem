@@ -1,6 +1,7 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cuit.interviewsystem.model.dto.CompanyInfoDto;
 import com.cuit.interviewsystem.model.entity.Company;
 
 /**
@@ -12,4 +13,8 @@ public interface CompanyService extends IService<Company> {
     Company getCompanyById(Long id);
 
     int deleteCompanyById(Long id);
+
+    int addOneCompany(CompanyInfoDto cid);
+
+    int updateCompanyById(Long id, CompanyInfoDto cid);
 }

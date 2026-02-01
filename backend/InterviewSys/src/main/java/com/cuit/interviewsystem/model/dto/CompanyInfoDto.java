@@ -2,6 +2,7 @@ package com.cuit.interviewsystem.model.dto;
 
 
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.Serializable;
 
@@ -16,9 +17,9 @@ public class CompanyInfoDto implements Serializable {
     private Long adminId;
     private String companyName;
     /**
-     * Logo URL
+     * Logo
      */
-    private String logoUrl;
+    private MultipartFile logo;
     private String website;
     private String introduction;
     private String industry;
@@ -32,6 +33,6 @@ public class CompanyInfoDto implements Serializable {
     /**
      * 营业执照URL
      */
-    private String businessLicenseUrl;
+    private MultipartFile businessLicense;
     private Integer isDeleted;
 }

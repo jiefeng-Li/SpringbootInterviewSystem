@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.CompanyCertificationRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.CompanyCertificationRecord">
+            <id property="id" column="id" />
+            <result property="company_id" column="company_id" />
+            <result property="admin_id" column="admin_id" />
+            <result property="contact_name" column="contact_name" />
+            <result property="contact_phone" column="contact_phone" />
+            <result property="contact_email" column="contact_email" />
+            <result property="contact_position" column="contact_position" />
+            <result property="status" column="status" />
+            <result property="review_notes" column="review_notes" />
+            <result property="reviewed_by" column="reviewed_by" />
+            <result property="is_deleted" column="is_deleted" />
+            <result property="reviewed_time" column="reviewed_time" />
+            <result property="create_time" column="create_time" />
+            <result property="update_time" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,company_id,admin_id,contact_name,contact_phone,contact_email,
+        contact_position,status,review_notes,reviewed_by,is_deleted,
+        reviewed_time,create_time,update_time
+    </sql>
+</mapper>

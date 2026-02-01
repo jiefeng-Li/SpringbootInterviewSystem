@@ -18,15 +18,16 @@ public class AliOSSUtil {
     @Resource
     private AliOSSConfig aliOSSConfig;
 
-    public String uploadFile(MultipartFile file) throws IOException { {
+    public String uploadFile(MultipartFile file, String prefix) throws IOException { {
         String fileName = file.getOriginalFilename();
         String suffix = fileName.substring(fileName.lastIndexOf("."));
-        String newFileName = UUID.randomUUID().toString().replace("-", "");
+        String newFileName = prefix + UUID.randomUUID().toString().replace("-", "");
 //        file.transferTo(new File("../../templates" + newFileName + suffix));
         //获取文件的后缀，产生以为不重复的名称
         //调用阿里云的SDK上传至OSS
         PutObjectRequest putObjectRequest = new PutObjectRequest(aliOSSConfig.getBucketName(), newFileName + suffix,
                 file.getInputStream());
+
         // 上传文件。
         PutObjectResult result = ossClient.putObject(putObjectRequest);
         return "https://" + aliOSSConfig.getBucketName() + "." + aliOSSConfig.getEndpoint() + "/" + newFileName + suffix;

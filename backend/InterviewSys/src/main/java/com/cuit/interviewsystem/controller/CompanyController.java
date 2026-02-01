@@ -5,14 +5,15 @@ import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
-import com.cuit.interviewsystem.model.dto.CompanyUserPageDto;
+import com.cuit.interviewsystem.model.dto.CompanyCertificationRecordAddDto;
+import com.cuit.interviewsystem.model.dto.CompanyInfoDto;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.CompanyVo;
-import com.cuit.interviewsystem.model.vo.PageVo;
-import com.cuit.interviewsystem.model.vo.UserVo;
+import com.cuit.interviewsystem.service.CompanyCertificationRecordService;
 import com.cuit.interviewsystem.service.CompanyService;
+import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.utils.JWTUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -87,25 +89,22 @@ public class CompanyController {
     }
 
     @PutMapping("/{id}")
-    public Result<Long> updateCompanyById(@PathVariable Long id) {
-        //TODO 封装dto
-        return Result.success();
+    public Result<Long> updateCompanyById(@PathVariable Long id, @RequestBody CompanyInfoDto cid) {
+        int i = companyService.updateCompanyById(id, cid);
+        if (i <= 0)
+            throw new BusinessException(ErrorEnum.NOT_FOUND_ERROR);
+        return Result.success(null, "更新成功");
     }
 
     @PostMapping
-    public Result<Long> addOneCompany(@RequestBody Company company) {
-        //TODO 封装dto
-        return Result.success();
-    }
+    public Result<Long> addOneCompany(@RequestBody CompanyInfoDto cid) {
+        MultipartFile logoPicture = cid.getLogo();
+        MultipartFile businessLicensePicture = cid.getBusinessLicense();
+        //对上传的文件进行校验
 
-    /**
-     * 获取公司用户列表
-     * @param dto
-     * @return
-     */
-    @GetMapping("/user/list")
-    @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN, UserRoleEnum.SYS_ADMIN})
-    public Result<PageVo<UserVo>> getCompanyUsers(CompanyUserPageDto dto) {
-        return Result.success();
+        int i = companyService.addOneCompany(cid);
+        if (i <= 0)
+            throw new BusinessException(ErrorEnum.SYSTEM_ERROR);
+        return Result.success(null,"添加成功");
     }
 }

@@ -43,8 +43,9 @@ public enum UserRoleEnum {
     }
 
     public static UserRoleEnum getRole(String str) {
-        UserRoleEnum textRole = getEnumByText(str);
         UserRoleEnum valueRole = getEnumByValue(str);
-        return textRole == null ? valueRole : textRole;
+        if (valueRole != null)
+            return valueRole;
+        return getEnumByText(str);
     }
 }
