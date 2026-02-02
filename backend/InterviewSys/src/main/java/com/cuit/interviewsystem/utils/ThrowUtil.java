@@ -1,24 +1,23 @@
 package com.cuit.interviewsystem.utils;
 
 
-import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 
 public class ThrowUtil <T> {
-    public static void throwIfTure(boolean condition, RuntimeException runtimeException) {
+    public static void throwIfTrue(boolean condition, RuntimeException runtimeException) {
         if (condition) {
             throw runtimeException;
         }
     }
 
-    public static void throwIfTure(boolean condition, BusinessException be) {
+    public static void throwIfTrue(boolean condition, BusinessException be) {
         if (condition) {
             throw be;
         }
     }
 
-    public static void throwIfTure(boolean condition, ErrorEnum errorEnum) {
+    public static void throwIfTrue(boolean condition, ErrorEnum errorEnum) {
         if (condition) {
             throw new BusinessException(errorEnum);
         }
@@ -30,7 +29,7 @@ public class ThrowUtil <T> {
      * @param code 错误码
      * @param message 错误信息
      */
-    public static void throwIfTure(boolean condition, int code, String message) {
+    public static void throwIfTrue(boolean condition, int code, String message) {
         if (condition) {
             throw new BusinessException(code, message);
         }

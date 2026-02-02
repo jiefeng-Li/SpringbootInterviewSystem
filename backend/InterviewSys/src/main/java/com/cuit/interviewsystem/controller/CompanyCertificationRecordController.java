@@ -1,10 +1,13 @@
 package com.cuit.interviewsystem.controller;
 
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
-import com.cuit.interviewsystem.model.dto.CompanyCertification4AdminDto;
+import com.cuit.interviewsystem.model.dto.AdminReviewCertificationDto;
+import com.cuit.interviewsystem.model.dto.CertificationRecordPageDto;
 import com.cuit.interviewsystem.model.dto.CompanyCertificationRecordAddDto;
+import com.cuit.interviewsystem.model.entity.CompanyCertificationRecord;
 import com.cuit.interviewsystem.model.enums.CompanyCertificationStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.service.CompanyCertificationRecordService;
@@ -52,8 +55,15 @@ public class CompanyCertificationRecordController {
      */
     @PutMapping("/{id}")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
-    public Result<String> reviewCompanyCertification(@PathVariable Long id, @RequestBody CompanyCertification4AdminDto dto) {
+    public Result<String> reviewCompanyCertification(@PathVariable Long id, @RequestBody AdminReviewCertificationDto dto) {
         recordService.reviewCompanyCertification(dto);
         return Result.success("提交成功");
+    }
+
+    @GetMapping("/list")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
+    public Result<?> companyCertificationList(CertificationRecordPageDto dto) {
+        Page<CompanyCertificationRecord> page = recordService.getRecords(dto);
+        return Result.success();
     }
 }

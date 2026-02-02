@@ -47,7 +47,7 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
     private AliOSSUtil aliOSSUtil;
     @Override
     public Company getCompanyById(Long id) {
-        ThrowUtil.throwIfTure(id <= 0, ErrorEnum.PARAMS_ERROR);
+        ThrowUtil.throwIfTrue(id <= 0, ErrorEnum.PARAMS_ERROR);
         return companyMapper.selectById(id);
     }
 
@@ -58,7 +58,7 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
      */
     @Override
     public int deleteCompanyById(Long id) {
-        ThrowUtil.throwIfTure(id <= 0, ErrorEnum.PARAMS_ERROR);
+        ThrowUtil.throwIfTrue(id <= 0, ErrorEnum.PARAMS_ERROR);
         return companyMapper.deleteById(id);
     }
 
@@ -71,12 +71,12 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
         String logoSuffix = cid.getLogo().getOriginalFilename().substring(cid.getLogo().getOriginalFilename().lastIndexOf("."));
         String licenseSuffix = cid.getBusinessLicense().getOriginalFilename().substring(cid.getBusinessLicense().getOriginalFilename().lastIndexOf("."));
         //判断是否图片格式
-        ThrowUtil.throwIfTure(!logoSuffix.equals(".png") && !logoSuffix.equals(".jpg") && !logoSuffix.equals(".jpeg"),
+        ThrowUtil.throwIfTrue(!logoSuffix.equals(".png") && !logoSuffix.equals(".jpg") && !logoSuffix.equals(".jpeg"),
                 ErrorEnum.PARAMS_ERROR.getCode(), "图片格式不正确");
-        ThrowUtil.throwIfTure(!licenseSuffix.equals(".png") && !licenseSuffix.equals(".jpg") && !licenseSuffix.equals(".jpeg"),
+        ThrowUtil.throwIfTrue(!licenseSuffix.equals(".png") && !licenseSuffix.equals(".jpg") && !licenseSuffix.equals(".jpeg"),
                 ErrorEnum.PARAMS_ERROR.getCode(), "图片格式不正确");
         //限制图片大小
-        ThrowUtil.throwIfTure(cid.getLogo().getSize() > 1024 * 1024 * 5,
+        ThrowUtil.throwIfTrue(cid.getLogo().getSize() > 1024 * 1024 * 5,
                 ErrorEnum.PARAMS_ERROR.getCode(), "图片大小不能超过5MB");
         //上传图片
         String logoUrl = null, licenseUrl = null;
@@ -95,8 +95,8 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
     public int updateCompanyById(Long id, CompanyInfoDto cid) {
         Company cmp = new Company();
         BeanUtils.copyProperties(cid, cmp);
-        ThrowUtil.throwIfTure(id == null || id <= 0, ErrorEnum.PARAMS_ERROR);
-        ThrowUtil.throwIfTure(!id.equals(cid.getCompanyId()), ErrorEnum.PARAMS_ERROR);
+        ThrowUtil.throwIfTrue(id == null || id <= 0, ErrorEnum.PARAMS_ERROR);
+        ThrowUtil.throwIfTrue(!id.equals(cid.getCompanyId()), ErrorEnum.PARAMS_ERROR);
         objectCheck(cmp);
         //获取当前角色
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
@@ -106,7 +106,7 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
         //非系统管理员无法修改status
         if (cmp.getStatus() != null) {
             //用户不为系统管理员，且status字段被修改。抛出无权限异常
-            ThrowUtil.throwIfTure(!UserRoleEnum.SYS_ADMIN.equals(ure)
+            ThrowUtil.throwIfTrue(!UserRoleEnum.SYS_ADMIN.equals(ure)
                     && companyMapper.exists(new LambdaQueryWrapper<Company>()
                     .eq(Company::getCompanyId, id)
                     .ne(Company::getStatus, cmp.getStatus())),
@@ -122,29 +122,29 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
 
     private void objectCheck(Company c) {
         //region 非空字段校验
-        ThrowUtil.throwIfTure(c == null, ErrorEnum.PARAMS_ERROR.getCode(), "公司信息不能为空");
-        ThrowUtil.throwIfTure(c.getCompanyName() == null,
+        ThrowUtil.throwIfTrue(c == null, ErrorEnum.PARAMS_ERROR.getCode(), "公司信息不能为空");
+        ThrowUtil.throwIfTrue(c.getCompanyName() == null,
                 ErrorEnum.PARAMS_ERROR.getCode(), "公司名称不能为空");
-        ThrowUtil.throwIfTure(c.getCompanyName().length() >= 100,
+        ThrowUtil.throwIfTrue(c.getCompanyName().length() >= 100,
                 ErrorEnum.PARAMS_ERROR.getCode(), "公司名称过长");
         CompanyStatusEnum status = CompanyStatusEnum.getEnum(c.getStatus());
-        ThrowUtil.throwIfTure(status == null,
+        ThrowUtil.throwIfTrue(status == null,
                 ErrorEnum.PARAMS_ERROR.getCode(), "公司状态不合法");
-        ThrowUtil.throwIfTure(c.getBusinessLicenseUrl() == null,
+        ThrowUtil.throwIfTrue(c.getBusinessLicenseUrl() == null,
                 ErrorEnum.PARAMS_ERROR.getCode(), "营业执照不能为空");
-        ThrowUtil.throwIfTure(c.getAdminId() == null,
+        ThrowUtil.throwIfTrue(c.getAdminId() == null,
                 ErrorEnum.PARAMS_ERROR.getCode(), "管理员id不能为空");
-        ThrowUtil.throwIfTure(!userMapper.exists(new LambdaQueryWrapper<User>()
+        ThrowUtil.throwIfTrue(!userMapper.exists(new LambdaQueryWrapper<User>()
                 .eq(User::getUserId, c.getAdminId())),
                 ErrorEnum.PARAMS_ERROR.getCode(), "管理员用户不存在");
         //endregion
-        ThrowUtil.throwIfTure(c.getIntroduction() != null && c.getIntroduction().length() >= 1024,
+        ThrowUtil.throwIfTrue(c.getIntroduction() != null && c.getIntroduction().length() >= 1024,
                 ErrorEnum.PARAMS_ERROR.getCode(), "公司简介过长");
-        ThrowUtil.throwIfTure(c.getIndustry() != null && c.getIndustry().length() >= 100,
+        ThrowUtil.throwIfTrue(c.getIndustry() != null && c.getIndustry().length() >= 100,
                 ErrorEnum.PARAMS_ERROR.getCode(), "公司所属行业，数据过长");
-        ThrowUtil.throwIfTure(c.getScale() != null && c.getScale().length() >= 20,
+        ThrowUtil.throwIfTrue(c.getScale() != null && c.getScale().length() >= 20,
                 ErrorEnum.PARAMS_ERROR.getCode(), "公司规模，数据过长");
-        ThrowUtil.throwIfTure(c.getCity() != null && c.getCity().length() >= 50,
+        ThrowUtil.throwIfTrue(c.getCity() != null && c.getCity().length() >= 50,
                 ErrorEnum.PARAMS_ERROR.getCode(), "公司所在城市，数据过长");
     }
 }

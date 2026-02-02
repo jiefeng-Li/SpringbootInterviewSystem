@@ -150,7 +150,7 @@ public class UserController {
 
     @GetMapping("/list")
 //    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
-    public Result<PageVo<UserVo>> getUsersByPage(UserPageDto conditions) {
+    public Result<PageVo<UserVo>> getUserPage(UserPageDto conditions) {
         Page<User> users = userService.getUsers(conditions);
         List<User> records = users.getRecords();
         List<UserVo> res = new ArrayList<>();

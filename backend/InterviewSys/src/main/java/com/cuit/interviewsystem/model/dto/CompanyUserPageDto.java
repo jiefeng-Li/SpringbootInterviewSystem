@@ -2,13 +2,11 @@ package com.cuit.interviewsystem.model.dto;
 
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class CompanyUserPageDto {
-    //必须
-    private Long pageSize;
-    //必须
-    private Long pageNum;
+public class CompanyUserPageDto extends PageDto{
     private Long companyId;
     private String role;
 }

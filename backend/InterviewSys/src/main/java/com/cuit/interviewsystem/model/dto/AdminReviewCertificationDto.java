@@ -5,7 +5,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class CompanyCertification4AdminDto implements Serializable {
+public class AdminReviewCertificationDto implements Serializable {
     private static final long serialVersionUID = 4290902804302016050L;
 
     private Long id;

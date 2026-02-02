@@ -50,14 +50,14 @@ public class AuthCheckInterceptor {
         }
         // 以下的代码：必须有权限，才会通过
         // token为空或校验不通过
-        ThrowUtil.throwIfTure(token == null || !jwtUtil.verify(token), ErrorEnum.NOT_LOGIN_ERROR);
+        ThrowUtil.throwIfTrue(token == null || !jwtUtil.verify(token), ErrorEnum.NOT_LOGIN_ERROR);
         UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(jwtUtil.parse(token, JWTUtil.ELEMENT_ROLE));
         // 要求权限与登录用户的权限不同
         //可能存在多种角色访问同一接口的情况
-        ThrowUtil.throwIfTure(!UserRoleEnum.SYS_ADMIN.equals(userRoleEnum)
+        ThrowUtil.throwIfTrue(!UserRoleEnum.SYS_ADMIN.equals(userRoleEnum)
                 || !mustRoles.contains(userRoleEnum), ErrorEnum.UNAUTHORIZED);
         //如果用户账号状态不为NORMAL则不通过
-        ThrowUtil.throwIfTure(
+        ThrowUtil.throwIfTrue(
                 !UserAccountStatusEnum.NORMAL.equals(
                         UserAccountStatusEnum.getEnumByStatus(
                                 userMapper.selectById(

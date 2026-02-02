@@ -2,12 +2,15 @@ package com.cuit.interviewsystem.service.impl;
 
 import cn.hutool.core.util.PhoneUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.CompanyMapper;
 import com.cuit.interviewsystem.mapper.UserMapper;
-import com.cuit.interviewsystem.model.dto.CompanyCertification4AdminDto;
+import com.cuit.interviewsystem.model.dto.AdminReviewCertificationDto;
+import com.cuit.interviewsystem.model.dto.CertificationRecordPageDto;
 import com.cuit.interviewsystem.model.dto.CompanyCertificationRecordAddDto;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.CompanyCertificationRecord;
@@ -17,6 +20,7 @@ import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.service.CompanyCertificationRecordService;
 import com.cuit.interviewsystem.mapper.CompanyCertificationRecordMapper;
 import com.cuit.interviewsystem.utils.JWTUtil;
+import com.cuit.interviewsystem.utils.PageUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -68,7 +72,7 @@ public class CompanyCertificationRecordServiceImpl extends ServiceImpl<CompanyCe
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         String token = request.getHeader("token");
         UserRoleEnum ure = UserRoleEnum.getRole(jwtUtil.parse(token, JWTUtil.ELEMENT_ROLE));
-        ThrowUtil.throwIfTure(!UserRoleEnum.COMP_ADMIN.equals(ure), ErrorEnum.UNAUTHORIZED);
+        ThrowUtil.throwIfTrue(!UserRoleEnum.COMP_ADMIN.equals(ure), ErrorEnum.UNAUTHORIZED);
         newRecord.setAdminId(ccrad.getAdminId());
         return recordMapper.insert(newRecord);
     }
@@ -80,17 +84,17 @@ public class CompanyCertificationRecordServiceImpl extends ServiceImpl<CompanyCe
      */
     @Override
     @Transactional
-    public int reviewCompanyCertification(CompanyCertification4AdminDto dto) {
-        ThrowUtil.throwIfTure(dto.getId() == null, ErrorEnum.PARAMS_ERROR);
+    public int reviewCompanyCertification(AdminReviewCertificationDto dto) {
+        ThrowUtil.throwIfTrue(dto.getId() == null, ErrorEnum.PARAMS_ERROR);
         CompanyCertificationRecord record = recordMapper.selectById(dto.getId());
-        ThrowUtil.throwIfTure(record == null, ErrorEnum.PARAMS_ERROR.getCode(), "认证记录不存在");
-        ThrowUtil.throwIfTure(record.getIsDeleted() == 1, ErrorEnum.PARAMS_ERROR.getCode(), "认证记录已删除");
-        ThrowUtil.throwIfTure(!Objects.equals(record.getStatus(), CompanyCertificationStatusEnum.REVIEWING.getStatus()),
+        ThrowUtil.throwIfTrue(record == null, ErrorEnum.PARAMS_ERROR.getCode(), "认证记录不存在");
+        ThrowUtil.throwIfTrue(record.getIsDeleted() == 1, ErrorEnum.PARAMS_ERROR.getCode(), "认证记录已删除");
+        ThrowUtil.throwIfTrue(!Objects.equals(record.getStatus(), CompanyCertificationStatusEnum.REVIEWING.getStatus()),
                 ErrorEnum.PARAMS_ERROR.getCode(), "认证记录已审核");
         //工具认证记录的审核情况，修改公司状态
         Company company = companyMapper.selectById(record.getCompanyId());
         CompanyCertificationStatusEnum certificationStatus = CompanyCertificationStatusEnum.getEnum(dto.getStatus());
-        ThrowUtil.throwIfTure(certificationStatus == null, ErrorEnum.PARAMS_ERROR.getCode(), "认证状态异常");
+        ThrowUtil.throwIfTrue(certificationStatus == null, ErrorEnum.PARAMS_ERROR.getCode(), "认证状态异常");
         switch (certificationStatus) {
             case CompanyCertificationStatusEnum.PASS:
                 company.setStatus(CompanyStatusEnum.NORMAL.getStatus());
@@ -116,23 +120,36 @@ public class CompanyCertificationRecordServiceImpl extends ServiceImpl<CompanyCe
         return companyMapper.updateById(company);
     }
 
+    @Override
+    public Page<CompanyCertificationRecord> getRecords(CertificationRecordPageDto dto) {
+        PageUtil.validData(dto);
+        Page<CompanyCertificationRecord> page = new Page<>(dto.getPageNum(), dto.getPageSize());
+        CompanyCertificationStatusEnum status = CompanyCertificationStatusEnum.getEnum(dto.getStatus());
+        ThrowUtil.throwIfTrue(status == null, ErrorEnum.PARAMS_ERROR);
+        return recordMapper.selectPage(page, new LambdaQueryWrapper<CompanyCertificationRecord>()
+                .eq(CompanyCertificationRecord::getIsDeleted, dto.getIsDeleted())
+                .eq(CompanyCertificationRecord::getCompanyId, dto.getCompanyId())
+                .eq(CompanyCertificationRecord::getReviewedBy, dto.getReviewBy())
+                .eq(CompanyCertificationRecord::getStatus, status.getStatus()));
+    }
+
     private void objectCheck(CompanyCertificationRecord companyCertificationRecord) {
         Company cmp = companyMapper.selectById(companyCertificationRecord.getCompanyId());
-        ThrowUtil.throwIfTure(cmp == null, ErrorEnum.PARAMS_ERROR.getCode(), "公司不存在");
+        ThrowUtil.throwIfTrue(cmp == null, ErrorEnum.PARAMS_ERROR.getCode(), "公司不存在");
         //公司状态
         CompanyStatusEnum cse = CompanyStatusEnum.getEnum(cmp.getStatus());
-        ThrowUtil.throwIfTure(CompanyStatusEnum.NORMAL.equals(cse), ErrorEnum.PARAMS_ERROR.getCode(), "公司状态异常");
-        ThrowUtil.throwIfTure(StrUtil.isBlank(companyCertificationRecord.getContactName()),
+        ThrowUtil.throwIfTrue(CompanyStatusEnum.NORMAL.equals(cse), ErrorEnum.PARAMS_ERROR.getCode(), "公司状态异常");
+        ThrowUtil.throwIfTrue(StrUtil.isBlank(companyCertificationRecord.getContactName()),
                 ErrorEnum.PARAMS_ERROR.getCode(), "联系人不能为空");
-        ThrowUtil.throwIfTure(companyCertificationRecord.getContactName().length() >= 50,
+        ThrowUtil.throwIfTrue(companyCertificationRecord.getContactName().length() >= 50,
                 ErrorEnum.PARAMS_ERROR.getCode(), "联系人长度不能超过50");
-        ThrowUtil.throwIfTure(StrUtil.isBlank(companyCertificationRecord.getContactPhone()),
+        ThrowUtil.throwIfTrue(StrUtil.isBlank(companyCertificationRecord.getContactPhone()),
                 ErrorEnum.PARAMS_ERROR.getCode(), "联系人电话不能为空");
-        ThrowUtil.throwIfTure(PhoneUtil.isPhone(companyCertificationRecord.getContactPhone()),
+        ThrowUtil.throwIfTrue(PhoneUtil.isPhone(companyCertificationRecord.getContactPhone()),
                 ErrorEnum.PARAMS_ERROR.getCode(), "联系人电话格式不正确");
-        ThrowUtil.throwIfTure(StrUtil.isBlank(companyCertificationRecord.getContactEmail()),
+        ThrowUtil.throwIfTrue(StrUtil.isBlank(companyCertificationRecord.getContactEmail()),
                 ErrorEnum.PARAMS_ERROR.getCode(), "联系人邮箱不能为空");
-        ThrowUtil.throwIfTure(companyCertificationRecord.getContactEmail().matches(EMAIL_MATCH_RULE),
+        ThrowUtil.throwIfTrue(companyCertificationRecord.getContactEmail().matches(EMAIL_MATCH_RULE),
                 ErrorEnum.PARAMS_ERROR.getCode(), "联系人邮箱格式不正确");
     }
 }

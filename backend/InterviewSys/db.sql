@@ -65,3 +65,22 @@ CREATE TABLE `t_company_certification_record` (
    INDEX `idx_company_id` (`company_id`),
    INDEX `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公司资质认证记录表';
+
+-- 4. 创建求职者绑定公司的记录表
+CREATE TABLE `t_binding_request` (
+     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '申请记录ID',
+     `user_id` bigint NOT NULL COMMENT '申请人ID（招聘者）',
+     `company_id` bigint NOT NULL COMMENT '目标公司ID',
+     `application_notes` text COMMENT '申请备注',
+     `status` tinyint NOT NULL DEFAULT '0' COMMENT '状态(0待审,1通过,2拒绝,3取消)',
+     `reviewed_by` bigint DEFAULT NULL COMMENT '审核人ID（公司管理员）',
+     `review_notes` text COMMENT '审核意见',
+     `reviewed_time` datetime DEFAULT NULL COMMENT '审核时间',
+     `expires_at` datetime NOT NULL COMMENT '申请失效时间',
+     `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除',
+     `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+     `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+     PRIMARY KEY (`id`),
+     KEY `idx_applicant_id` (`user_id`),
+     KEY `idx_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='招聘者绑定公司申请记录表';
