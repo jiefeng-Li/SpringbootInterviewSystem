@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum CompanyCertificationStatusEnum {
     REVIEWING(0, "待审"),
     PASS(1, "通过"),
-    REFUSE(2, "驳回");
+    REFUSE(2, "驳回"),
+    CANCEL(3, "取消");
     private final Integer status;
     private final String text;
 

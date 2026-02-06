@@ -55,7 +55,7 @@ public class AuthCheckInterceptor {
         // 要求权限与登录用户的权限不同
         //可能存在多种角色访问同一接口的情况
         ThrowUtil.throwIfTrue(!UserRoleEnum.SYS_ADMIN.equals(userRoleEnum)
-                || !mustRoles.contains(userRoleEnum), ErrorEnum.UNAUTHORIZED);
+                && !mustRoles.contains(userRoleEnum), ErrorEnum.UNAUTHORIZED);
         //如果用户账号状态不为NORMAL则不通过
         ThrowUtil.throwIfTrue(
                 !UserAccountStatusEnum.NORMAL.equals(

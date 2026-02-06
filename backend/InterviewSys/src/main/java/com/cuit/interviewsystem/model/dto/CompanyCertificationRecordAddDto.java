@@ -6,16 +6,6 @@ import lombok.Data;
 @Data
 public class CompanyCertificationRecordAddDto {
     /**
-     * 公司ID
-     */
-    private Long companyId;
-
-    /**
-     * 企业管理员ID 对应用户表user_id
-     */
-    private Long adminId;
-
-    /**
      * 联系人
      */
     private String contactName;

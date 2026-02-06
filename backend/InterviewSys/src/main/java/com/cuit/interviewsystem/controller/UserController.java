@@ -47,6 +47,8 @@ public class UserController {
     @PostMapping("/admin/register")
     public Result sysAdminRegister(UserRegisterDto userRegisterDto) {
         long userId = userService.sysAdminRegister(userRegisterDto);
+        if (userId <= 0)
+            return Result.error(ErrorEnum.SYSTEM_ERROR, "用户注册失败");
         record userRecord(long userId){}
         return Result.success(new userRecord(userId));
     }
@@ -56,7 +58,7 @@ public class UserController {
      * @param userRegisterDto
      * @return
      */
-    @PostMapping("/comp/register")
+        @PostMapping("/comp/register")
     public Result<Long> compUserRegister(UserRegisterDto userRegisterDto) {
         long userId = userService.compUserRegister(userRegisterDto);
         return Result.success(userId);
@@ -232,6 +234,6 @@ public class UserController {
         int cnt = userService.updateOneUser(id, user);
         if (cnt == 0)
             return Result.error(ErrorEnum.NOT_FOUND_ERROR.getCode(), "更新失败，用户不存在");
-        return Result.success(null);
+        return Result.success();
     }
 }

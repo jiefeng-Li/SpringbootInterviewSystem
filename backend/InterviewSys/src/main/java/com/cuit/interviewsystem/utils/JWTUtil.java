@@ -44,7 +44,9 @@ public class JWTUtil {
     public String parse(String token, String eleName){
         String res = null;
         if (verify(token)){
-            res = JWT.of(token).getPayload(eleName).toString();
+            Object payload = JWT.of(token).getPayload(eleName);
+            if (payload != null)
+                return payload.toString();
         }
         return res;
     }

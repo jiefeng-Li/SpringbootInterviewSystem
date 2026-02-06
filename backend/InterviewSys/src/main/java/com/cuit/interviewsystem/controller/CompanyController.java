@@ -5,6 +5,7 @@ import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
+import com.cuit.interviewsystem.model.dto.CompanyAddDto;
 import com.cuit.interviewsystem.model.dto.CompanyCertificationRecordAddDto;
 import com.cuit.interviewsystem.model.dto.CompanyInfoDto;
 import com.cuit.interviewsystem.model.entity.Company;
@@ -96,15 +97,16 @@ public class CompanyController {
         return Result.success(null, "更新成功");
     }
 
+    /**
+     * HttpMediaTypeNotSupportedException 表明Spring无法处理 multipart/form-data 类型的请求。
+     * 使用了 @RequestBody 注解：这个注解用于接收JSON/XML等格式，不能用于接收文件上传
+     * @param cad
+     * @return 放入公司id的token
+     */
     @PostMapping
-    public Result<Long> addOneCompany(@RequestBody CompanyInfoDto cid) {
-        MultipartFile logoPicture = cid.getLogo();
-        MultipartFile businessLicensePicture = cid.getBusinessLicense();
-        //对上传的文件进行校验
-
-        int i = companyService.addOneCompany(cid);
-        if (i <= 0)
-            throw new BusinessException(ErrorEnum.SYSTEM_ERROR);
-        return Result.success(null,"添加成功");
+    @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
+    public Result<String> addOneCompany(@ModelAttribute CompanyAddDto cad) {
+        String newToken = companyService.addOneCompany(cad);
+        return Result.success(newToken,"添加成功");
     }
 }

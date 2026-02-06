@@ -71,12 +71,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         this.objectCheck(admin);
         //密码加密
         admin.setPassword(digester.digestHex(admin.getPassword() + SALT));
-        //插入数据库
-        long userId = userMapper.insert(admin);
-        log.info(admin.toString());
-        log.info("userid is {}", userId);
-        //返回用户id
-        return userId;
+        //插入数据库, 返回用户id
+        return userMapper.insert(admin) > 0 ? admin.getUserId() : 0L;
     }
 
     @Override
@@ -88,7 +84,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //密码加密
         compUser.setPassword(digester.digestHex(compUser.getPassword() + SALT));
         //插入数据库
-        return userMapper.insert(compUser);
+        return userMapper.insert(compUser) > 0 ? compUser.getUserId() : 0L;
     }
 
     @Override
@@ -99,7 +95,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //密码加密
         u.setPassword(digester.digestHex(u.getPassword() + SALT));
         //插入数据库
-        return userMapper.insert(u);
+        return userMapper.insert(u) > 0 ? u.getUserId() : 0L;
     }
 
     @Override
@@ -236,7 +232,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         //密码加密
         user.setPassword(digester.digestHex(user.getPassword() + SALT));
         //插入数据库，返回用户id
-        return userMapper.insert(user);
+        return userMapper.insert(user) > 0 ? user.getUserId() : 0;
     }
 
     @Override

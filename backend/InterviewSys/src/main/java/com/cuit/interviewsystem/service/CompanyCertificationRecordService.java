@@ -6,6 +6,7 @@ import com.cuit.interviewsystem.model.dto.CertificationRecordPageDto;
 import com.cuit.interviewsystem.model.dto.CompanyCertificationRecordAddDto;
 import com.cuit.interviewsystem.model.entity.CompanyCertificationRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cuit.interviewsystem.model.vo.CompanyCertificationRecordVo;
 
 /**
 * @author jiefe
@@ -17,5 +18,7 @@ public interface CompanyCertificationRecordService extends IService<CompanyCerti
 
     int reviewCompanyCertification(AdminReviewCertificationDto dto);
 
-    Page<CompanyCertificationRecord> getRecords(CertificationRecordPageDto dto);
+    Page<CompanyCertificationRecordVo> getRecords(CertificationRecordPageDto dto);
+
+    int deleteRecordById(Long id);
 }

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.UserMapper;
+import com.cuit.interviewsystem.model.dto.CompanyAddDto;
 import com.cuit.interviewsystem.model.dto.CompanyInfoDto;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.User;
@@ -21,9 +22,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Date;
@@ -62,33 +65,70 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
         return companyMapper.deleteById(id);
     }
 
+    /**
+     * 非企业管理员无法注册公司，
+     * 公司logo，营业执照仅支持png、jpg、jpeg格式的图片
+     * 当前登录用户的id为该企业的管理员
+     * @param cad
+     * @return 注册成功后的公司id
+     */
     @Override
-    public int addOneCompany(CompanyInfoDto cid) {
+    @Transactional
+    public String addOneCompany(CompanyAddDto cad) {
+        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
+        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
+        String token = request.getHeader("token");
+        ThrowUtil.throwIfTrue(jwtUtil.parse(token, JWTUtil.ELEMENT_COMPANY_ID) != null,
+                ErrorEnum.PARAMS_ERROR.getCode(), "您已注册公司，无法再次注册");
         Company cmp = new Company();
-        BeanUtils.copyProperties(cid, cmp);
-        objectCheck(cmp);
-        //获取上传的logo、营业执照的文件后缀
-        String logoSuffix = cid.getLogo().getOriginalFilename().substring(cid.getLogo().getOriginalFilename().lastIndexOf("."));
-        String licenseSuffix = cid.getBusinessLicense().getOriginalFilename().substring(cid.getBusinessLicense().getOriginalFilename().lastIndexOf("."));
-        //判断是否图片格式
-        ThrowUtil.throwIfTrue(!logoSuffix.equals(".png") && !logoSuffix.equals(".jpg") && !logoSuffix.equals(".jpeg"),
-                ErrorEnum.PARAMS_ERROR.getCode(), "图片格式不正确");
-        ThrowUtil.throwIfTrue(!licenseSuffix.equals(".png") && !licenseSuffix.equals(".jpg") && !licenseSuffix.equals(".jpeg"),
-                ErrorEnum.PARAMS_ERROR.getCode(), "图片格式不正确");
-        //限制图片大小
-        ThrowUtil.throwIfTrue(cid.getLogo().getSize() > 1024 * 1024 * 5,
-                ErrorEnum.PARAMS_ERROR.getCode(), "图片大小不能超过5MB");
-        //上传图片
+        BeanUtils.copyProperties(cad, cmp);
         String logoUrl = null, licenseUrl = null;
+        MultipartFile logoPicture = cad.getLogo();
+        MultipartFile businessLicensePicture = cad.getBusinessLicense();
+
+        //region 数据校验
+        //当前登录用户的id为该企业的管理员
+        cmp.setAdminId(Long.valueOf(jwtUtil.parse(token, JWTUtil.ELEMENT_USER_ID)));
+        cmp.setBusinessLicenseUrl("TEMP");//设置临时值
+        cmp.setStatus(CompanyStatusEnum.REVIEWING.getStatus());
+        objectCheck(cmp);
+        ThrowUtil.throwIfTrue(businessLicensePicture == null,
+                ErrorEnum.PARAMS_ERROR.getCode(), "营业执照不能为空");
+        String licenseSuffix = businessLicensePicture.getOriginalFilename().substring(businessLicensePicture.getOriginalFilename().lastIndexOf("."));
+        //判断是否图片格式
+        ThrowUtil.throwIfTrue(!licenseSuffix.equals(".png") && !licenseSuffix.equals(".jpg") && !licenseSuffix.equals(".jpeg"),
+                ErrorEnum.PARAMS_ERROR.getCode(), "图片格式不正确, 请上传png、jpg、jpeg格式的图片");
+        //限制图片大小
+        ThrowUtil.throwIfTrue(businessLicensePicture.getSize() > 1024 * 1024 * 5,
+                ErrorEnum.PARAMS_ERROR.getCode(), "图片大小不能超过5MB");
+        if (logoPicture != null) {
+            //获取上传的logo、营业执照的文件后缀
+            String logoSuffix = logoPicture.getOriginalFilename().substring(logoPicture.getOriginalFilename().lastIndexOf("."));
+            //判断是否图片格式
+            ThrowUtil.throwIfTrue(!logoSuffix.equals(".png") && !logoSuffix.equals(".jpg") && !logoSuffix.equals(".jpeg"),
+                    ErrorEnum.PARAMS_ERROR.getCode(), "图片格式不正确, 请上传png、jpg、jpeg格式的图片");
+            ThrowUtil.throwIfTrue(logoPicture.getSize() > 1024 * 1024 * 5,
+                    ErrorEnum.PARAMS_ERROR.getCode(), "图片大小不能超过5MB");
+        }
+        //endregion
+        //上传图片
         try {
-            logoUrl = aliOSSUtil.uploadFile(cid.getLogo(), Base64.encode(cid.getCompanyName().getBytes()));
-            licenseUrl = aliOSSUtil.uploadFile(cid.getBusinessLicense(), Base64.encode(cid.getCompanyName().getBytes()));
+            logoUrl = aliOSSUtil.uploadFile(logoPicture, Base64.encode(cad.getCompanyName().getBytes()));
+            licenseUrl = aliOSSUtil.uploadFile(businessLicensePicture, Base64.encode(cad.getCompanyName().getBytes()));
         } catch (IOException e) {
             throw new BusinessException(ErrorEnum.SYSTEM_ERROR, "上传图片失败");
         }
         cmp.setLogoUrl(logoUrl);
         cmp.setBusinessLicenseUrl(licenseUrl);
-        return companyMapper.insert(cmp);
+        User compAdmin = new User();
+        compAdmin.setUserId(cmp.getAdminId());
+        int row = companyMapper.insert(cmp);
+        if (row > 0) {
+            compAdmin.setCompanyId(cmp.getCompanyId());
+            userMapper.updateById(compAdmin);
+        }
+        //将公司id加入token
+        return jwtUtil.sign(compAdmin);
     }
 
     @Override
@@ -148,7 +188,3 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
                 ErrorEnum.PARAMS_ERROR.getCode(), "公司所在城市，数据过长");
     }
 }
-
-
-
-

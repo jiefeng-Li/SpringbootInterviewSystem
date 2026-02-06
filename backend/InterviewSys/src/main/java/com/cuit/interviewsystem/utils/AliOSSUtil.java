@@ -18,7 +18,17 @@ public class AliOSSUtil {
     @Resource
     private AliOSSConfig aliOSSConfig;
 
+    /**
+     * 上传文件, 若file为空则返回null
+     * @param file 需上传的文件
+     * @param prefix 文件名前缀
+     * @return 上传后的文件地址
+     * @throws IOException
+     */
     public String uploadFile(MultipartFile file, String prefix) throws IOException { {
+        if (file == null) {
+            return null;
+        }
         String fileName = file.getOriginalFilename();
         String suffix = fileName.substring(fileName.lastIndexOf("."));
         String newFileName = prefix + UUID.randomUUID().toString().replace("-", "");

@@ -4,14 +4,14 @@ package com.cuit.interviewsystem.model.enums;
 import lombok.Getter;
 
 /**
- * 状态(0待审,1正常,2驳回,3禁用)
+ * 状态(0待审,1正常,2禁用,3注销)
  */
 @Getter
 public enum CompanyStatusEnum {
     REVIEWING(0, "待审"),
     NORMAL(1, "正常"),
-    REFUSE(2, "驳回"),
-    BANED(3, "禁用");
+    BANED(2, "禁用"),
+    DEREGISTER(3, "注销");
     private final Integer status;
     private final String text;
 

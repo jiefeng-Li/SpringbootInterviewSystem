@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.CompanyCertificationRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.CompanyCertificationRecord">
+            <id property="id" column="id" />
+            <result property="companyId" column="company_id" />
+            <result property="adminId" column="admin_id" />
+            <result property="contactName" column="contact_name" />
+            <result property="contactPhone" column="contact_phone" />
+            <result property="contactEmail" column="contact_email" />
+            <result property="contactPosition" column="contact_position" />
+            <result property="status" column="status" />
+            <result property="reviewNotes" column="review_notes" />
+            <result property="reviewedBy" column="reviewed_by" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="reviewedTime" column="reviewed_time" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <resultMap id="CompanyCertificationRecordVoMap" type="com.cuit.interviewsystem.model.vo.CompanyCertificationRecordVo">
+        <id property="id" column="id" />
+        <result property="companyId" column="company_id" />
+        <result property="companyName" column="company_name"/>
+        <result property="companyLogoUrl" column="company_logo_url"/>
+        <result property="adminId" column="admin_id" />
+        <result property="adminName" column="admin_name"/>
+        <result property="contactName" column="contact_name" />
+        <result property="contactPhone" column="contact_phone" />
+        <result property="contactEmail" column="contact_email" />
+        <result property="contactPosition" column="contact_position" />
+        <result property="status" column="status" />
+        <result property="reviewNotes" column="review_notes" />
+        <result property="reviewedBy" column="reviewed_by" />
+        <result property="reviewedByName" column="reviewed_by_name"/>
+        <result property="isDeleted" column="is_deleted" />
+        <result property="reviewedTime" column="reviewed_time" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,company_id,admin_id,contact_name,contact_phone,contact_email,
+        contact_position,status,review_notes,reviewed_by,is_deleted,
+        reviewed_time,create_time,update_time
+    </sql>
+    <select id="getRecord" resultType="com.cuit.interviewsystem.model.vo.CompanyCertificationRecordVo">
+        SELECT
+            record.*,
+            company.company_name as company_name,
+            company.logo_url AS company_logo_url,
+            admin_user.username AS admin_name,
+            reviewer_user.username AS review_by_name
+        FROM t_company_certification_record record
+                 LEFT JOIN t_company company
+                           ON record.company_id = company.company_id
+                                  <if test="dto.companyId != null">
+                                      and  record.company_id = #{dto.companyId}
+                                  </if>
+                 LEFT JOIN t_user admin_user
+                           ON record.admin_id = admin_user.user_id
+                 LEFT JOIN t_user reviewer_user
+                           ON record.reviewed_by = reviewer_user.user_id
+                            <if test="dto.reviewBy != null">
+                                and record.reviewed_by = #{dto.reviewBy}
+                            </if>
+        WHERE record.is_deleted = #{dto.isDeleted}
+        <if test="dto.status != null">
+            and record.status = #{dto.status}
+        </if>
+        ORDER BY record.update_time DESC
+    </select>
+<!--        private Long companyId;
+    private Long reviewBy;
+    private Integer status;
+    //默认为0
+    private Integer isDeleted = 0;-->
+</mapper>
