@@ -17,7 +17,6 @@ import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.mapper.UserMapper;
 import com.cuit.interviewsystem.utils.JWTUtil;
-import com.cuit.interviewsystem.utils.PageUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -92,6 +91,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         User u = new User();
         BeanUtils.copyProperties(cur, u);
         this.objectCheck(u);
+        //防止调用该接口来注册成为管理员
+        if (u.getRole().equals(UserRoleEnum.COMP_ADMIN.getValue()) || u.getRole().equals(UserRoleEnum.SYS_ADMIN.getValue())) {
+            throw new BusinessException(ErrorEnum.PARAMS_ERROR, "用户类型错误");
+        }
         //密码加密
         u.setPassword(digester.digestHex(u.getPassword() + SALT));
         //插入数据库
@@ -100,7 +103,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public Page<User> getUsers(UserPageDto conditions) {
-        PageUtil.validData(conditions);
         Page<User> page = new Page<>(conditions.getPageNum(), conditions.getPageSize());
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         UserAccountStatusEnum status = UserAccountStatusEnum.getEnumByStatus(conditions.getAccountStatus());
@@ -195,7 +197,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             //密码长度在8-20，只包含且至少包含一个数字字母与一个数字，
             ThrowUtil.throwIfTrue(
                     !password.matches(PASSWORD_MATCH_RULE),
-                    ErrorEnum.PARAMS_ERROR.getCode(),
+                    ErrorEnum.PARAMS_ERROR,
                     "密码不符合规则"); //待抽取为常量
         }
         //数据校验end
@@ -211,9 +213,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public User getOneUser(User user) {
-        ThrowUtil.throwIfTrue(
-                ObjUtil.isEmpty(user),
-                new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<User>();
         lambdaQueryWrapper.eq(user.getUserId() != null, User::getUserId, user.getUserId())
                 .or().eq(user.getUsername() != null, User::getUsername, user.getUsername())
@@ -240,17 +239,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public int deleteOneUserById(Long delUserId) {
         ThrowUtil.throwIfTrue(delUserId  == null || delUserId <= 0,
                 ErrorEnum.PARAMS_ERROR);
-        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
-        String token = request.getHeader("token");
-        UserRoleEnum optRole = UserRoleEnum.getEnumByValue(jwtUtil.parse(token, JWTUtil.ELEMENT_ROLE));
+        User u = jwtUtil.parseLoginUser();
+        ThrowUtil.throwIfTrue(u == null, ErrorEnum.NOT_LOGIN_ERROR);
+        User optUser = userMapper.selectById(u.getUserId());
+        UserRoleEnum optRole = UserRoleEnum.getEnumByValue(optUser.getRole());
         User delUser = userMapper.selectById(delUserId);
-        User optUser = userMapper.selectById(jwtUtil.parse(token, JWTUtil.ELEMENT_USER_ID));
+
         //非管理员角色，管理员能够自由删除。
         ThrowUtil.throwIfTrue(ObjUtil.isEmpty(delUser),
-                ErrorEnum.PARAMS_ERROR.getCode(), "用户不存在");
+                ErrorEnum.PARAMS_ERROR, "用户不存在");
         ThrowUtil.throwIfTrue(delUser.getIsDeleted() == 1,
-                ErrorEnum.PARAMS_ERROR.getCode(), "用户已注销");
+                ErrorEnum.PARAMS_ERROR, "用户已注销");
         if (!UserRoleEnum.SYS_ADMIN.equals(optRole)) {
             // 若为公司管理员角色
             if (UserRoleEnum.COMP_ADMIN.equals(optRole)) {
@@ -258,11 +257,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 // 若被删除的用户与公司管理员的公司id不同则无权限
                 ThrowUtil.throwIfTrue(Objects.equals(UserRoleEnum.getEnumByValue(delUser.getRole()), UserRoleEnum.SYS_ADMIN)
                                 && !Objects.equals(optUser.getCompanyId(), delUser.getCompanyId()),
-                    ErrorEnum.PARAMS_ERROR.getCode(), "无权限删除该用户");
+                    ErrorEnum.PARAMS_ERROR, "无权限删除该用户");
             } else {
             // 其他角色则只能删除（账号注销）自己
                 ThrowUtil.throwIfTrue(!Objects.equals(optUser.getUserId(), delUser.getUserId()),
-                        ErrorEnum.PARAMS_ERROR.getCode(),
+                        ErrorEnum.PARAMS_ERROR,
                         "无权限删除该用户");
             }
         }
@@ -277,20 +276,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     @Override
     public int updateOneUser(Long id, User user) {
         ThrowUtil.throwIfTrue(id == null,
-                ErrorEnum.PARAMS_ERROR.getCode(), "路径请求参数为空");
+                ErrorEnum.PARAMS_ERROR, "路径请求参数为空");
         ThrowUtil.throwIfTrue(
                 ObjUtil.isEmpty(user),
                 new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
         ThrowUtil.throwIfTrue(!id.equals(user.getUserId()),
-                ErrorEnum.PARAMS_ERROR.getCode(), "路径参数与请求体数据不匹配");
+                ErrorEnum.PARAMS_ERROR, "路径参数与请求体数据不匹配");
         this.objectCheck(user);
         //获取当前操作用户，若为管理员则需要修改editTime字段
-        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
-        String token = request.getHeader("token");
+        User optUser = userMapper.selectById(jwtUtil.getLoginUserInfo(JWTUtil.ELEMENT.USER_ID));
         //权限校验，若权限不足则无法修改用户角色、账号状态字段。
         User old = userMapper.selectById(id);
-        User optUser = userMapper.selectById(jwtUtil.parse(token, JWTUtil.ELEMENT_USER_ID));
+
         if (UserRoleEnum.SYS_ADMIN.getValue().equals(optUser.getRole())) {
             user.setEditTime(new Date());
         } else if (UserRoleEnum.COMP_ADMIN.getValue().equals(optUser.getRole())) {
@@ -325,41 +322,34 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
         ThrowUtil.throwIfTrue(
                 StrUtil.isBlankIfStr(user.getUsername()),
-                ErrorEnum.PARAMS_ERROR.getCode(),
+                ErrorEnum.PARAMS_ERROR,
                 "用户名不能为空");
         ThrowUtil.throwIfTrue(
                 user.getUsername().length() > 45,
-                ErrorEnum.PARAMS_ERROR.getCode(),
+                ErrorEnum.PARAMS_ERROR,
                 "用户名过长");
         ThrowUtil.throwIfTrue(
                 !user.getPassword().matches(PASSWORD_MATCH_RULE),
-                ErrorEnum.PARAMS_ERROR.getCode(),
+                ErrorEnum.PARAMS_ERROR,
                 "密码不符合规则");
         ThrowUtil.throwIfTrue(
                 !PhoneUtil.isPhone(user.getPhone()),
-                ErrorEnum.PARAMS_ERROR.getCode(),
+                ErrorEnum.PARAMS_ERROR,
                 "请输入正确的手机号");
         ThrowUtil.throwIfTrue(
                 user.getEmail() != null && !user.getEmail().matches(EMAIL_MATCH_RULE),
-                ErrorEnum.PARAMS_ERROR.getCode(),
+                ErrorEnum.PARAMS_ERROR,
                 "请输入正确的邮箱");
-        //TODO 公司id校验
-        /*
-        ThrowUtil.throwIfTure(
-                user.getCompanyId() != null && ！companyMapper.exist(....),
-                ErrorEnum.PARAMS_ERROR.getCode(),
-                "所属公司不存在");
-        */
         ThrowUtil.throwIfTrue(
                 StrUtil.isBlankIfStr(user.getRole()),
-                ErrorEnum.PARAMS_ERROR.getCode(),
+                ErrorEnum.PARAMS_ERROR,
                 "用户角色不能为空"
         );
         UserRoleEnum role = UserRoleEnum.getRole(user.getRole());
         //校验用户角色的同时，并设置规范使用UserRoleEnum的value值
         ThrowUtil.throwIfTrue(
                 role == null,
-                ErrorEnum.PARAMS_ERROR.getCode(),
+                ErrorEnum.PARAMS_ERROR,
                 "用户角色不存在");
         user.setRole(role.getValue());
         //endregion
@@ -368,17 +358,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 userMapper.exists(new LambdaQueryWrapper<User>()
                         .eq(User::getUsername, user.getUsername())
                         .eq(User::getIsDeleted, 0)),
-                ErrorEnum.PARAMS_ERROR.getCode(), "用户名已存在");
+                ErrorEnum.PARAMS_ERROR, "用户名已存在");
         ThrowUtil.throwIfTrue(
                 userMapper.exists(new LambdaQueryWrapper<User>()
                         .eq(User::getPhone, user.getPhone())
                         .eq(User::getIsDeleted, 0)),
-                ErrorEnum.PARAMS_ERROR.getCode(), "手机号已注册");
+                ErrorEnum.PARAMS_ERROR, "手机号已注册");
         ThrowUtil.throwIfTrue(user.getEmail() != null &&
                         userMapper.exists(new LambdaQueryWrapper<User>()
                                 .eq(User::getEmail, user.getEmail())
                                 .eq(User::getIsDeleted, 0)),
-                ErrorEnum.PARAMS_ERROR.getCode(), "邮箱已注册");
+                ErrorEnum.PARAMS_ERROR, "邮箱已注册");
         //endregion
     }
 }

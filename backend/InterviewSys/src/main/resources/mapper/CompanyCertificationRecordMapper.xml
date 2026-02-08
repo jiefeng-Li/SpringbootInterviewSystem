@@ -21,28 +21,6 @@
             <result property="updateTime" column="update_time" />
     </resultMap>
 
-    <resultMap id="CompanyCertificationRecordVoMap" type="com.cuit.interviewsystem.model.vo.CompanyCertificationRecordVo">
-        <id property="id" column="id" />
-        <result property="companyId" column="company_id" />
-        <result property="companyName" column="company_name"/>
-        <result property="companyLogoUrl" column="company_logo_url"/>
-        <result property="adminId" column="admin_id" />
-        <result property="adminName" column="admin_name"/>
-        <result property="contactName" column="contact_name" />
-        <result property="contactPhone" column="contact_phone" />
-        <result property="contactEmail" column="contact_email" />
-        <result property="contactPosition" column="contact_position" />
-        <result property="status" column="status" />
-        <result property="reviewNotes" column="review_notes" />
-        <result property="reviewedBy" column="reviewed_by" />
-        <result property="reviewedByName" column="reviewed_by_name"/>
-        <result property="isDeleted" column="is_deleted" />
-        <result property="reviewedTime" column="reviewed_time" />
-        <result property="createTime" column="create_time" />
-        <result property="updateTime" column="update_time" />
-
-    </resultMap>
-
     <sql id="Base_Column_List">
         id,company_id,admin_id,contact_name,contact_phone,contact_email,
         contact_position,status,review_notes,reviewed_by,is_deleted,

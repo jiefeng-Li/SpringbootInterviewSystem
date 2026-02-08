@@ -4,6 +4,7 @@ package com.cuit.interviewsystem.aop;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.UserMapper;
+import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.utils.JWTUtil;
@@ -21,6 +22,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 @Aspect
 @Component
@@ -51,20 +53,18 @@ public class AuthCheckInterceptor {
         // 以下的代码：必须有权限，才会通过
         // token为空或校验不通过
         ThrowUtil.throwIfTrue(token == null || !jwtUtil.verify(token), ErrorEnum.NOT_LOGIN_ERROR);
-        UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(jwtUtil.parse(token, JWTUtil.ELEMENT_ROLE));
+        User curUser = jwtUtil.parseLoginUser();
+        UserRoleEnum userRoleEnum = UserRoleEnum.getEnumByValue(curUser.getRole());
         // 要求权限与登录用户的权限不同
         //可能存在多种角色访问同一接口的情况
         ThrowUtil.throwIfTrue(!UserRoleEnum.SYS_ADMIN.equals(userRoleEnum)
                 && !mustRoles.contains(userRoleEnum), ErrorEnum.UNAUTHORIZED);
-        //如果用户账号状态不为NORMAL则不通过
-        ThrowUtil.throwIfTrue(
-                !UserAccountStatusEnum.NORMAL.equals(
-                        UserAccountStatusEnum.getEnumByStatus(
-                                userMapper.selectById(
-                                        jwtUtil.parse(token, JWTUtil.ELEMENT_USER_ID))
-                                        .getAccountStatus()))
-                , ErrorEnum.NOT_LOGIN_ERROR.getCode(),
-                "账号被冻结或封禁");
+        //如果用户账号状态为BANED则不通过
+        User databaseInfo = userMapper.selectById(curUser.getUserId());
+        ThrowUtil.throwIfTrue(UserAccountStatusEnum.BANED.getStatus().equals(databaseInfo.getAccountStatus()),
+                ErrorEnum.NOT_LOGIN_ERROR, "用户已被禁用，请联系管理员");
+        ThrowUtil.throwIfTrue(!Objects.equals(curUser.getCompanyId(), databaseInfo.getCompanyId()),
+                ErrorEnum.NOT_LOGIN_ERROR, "用户所属公司信息已变更，请重新登录");
         // 通过权限校验，放行
         return joinPoint.proceed();
     }

@@ -26,12 +26,19 @@ public class ThrowUtil <T> {
     /**
      *
      * @param condition 条件
-     * @param code 错误码
+     * @param errorEnum 提供错误码
      * @param message 错误信息
      */
-    public static void throwIfTrue(boolean condition, int code, String message) {
+    public static void throwIfTrue(boolean condition, ErrorEnum errorEnum, String message) {
+        if (condition) {
+            throw new BusinessException(errorEnum.getCode(), message);
+        }
+    }
+    /*
+        public static void throwIfTrue(boolean condition, int code, String message) {
         if (condition) {
             throw new BusinessException(code, message);
         }
     }
+     */
 }

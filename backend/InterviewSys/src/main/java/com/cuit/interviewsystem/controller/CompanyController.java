@@ -54,7 +54,7 @@ public class CompanyController {
         RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
         HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
         String token = request.getHeader("token");
-        String parse = jwtUtil.parse(token, JWTUtil.ELEMENT_COMPANY_ID);
+        String parse = jwtUtil.parse(token, JWTUtil.ELEMENT.COMPANY_ID);
         try {
             Company company = null;
             if (parse != null) {
@@ -82,11 +82,19 @@ public class CompanyController {
     }
 
     @DeleteMapping("/{id}")
-    @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN, UserRoleEnum.SYS_ADMIN})
-    //TODO 必须为对应公司管理员的用户删除/注销该公司
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result<?> deleteCompanyById(@PathVariable Long id) {
         int i = companyService.deleteCompanyById(id);
         return Result.success(null, i <= 0 ? "删除公司不存在或已被删除" : "删除成功");
+    }
+
+    @PutMapping("/deregister/{id}")
+    @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
+    public Result<?> deregisterCompanyById(Long id) {
+        int i = companyService.deregisterCompanyById(id);
+        if (i <= 0)
+            return Result.error(ErrorEnum.SYSTEM_ERROR, "注销失败");
+        return Result.success(null, "注销成功");
     }
 
     @PutMapping("/{id}")

@@ -35,6 +35,11 @@ public enum CompanyStatusEnum {
                 return statusEnum;
             }
         }
-        return null;
+        try {
+            int status = Integer.parseInt(text);
+            return getEnum(status);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

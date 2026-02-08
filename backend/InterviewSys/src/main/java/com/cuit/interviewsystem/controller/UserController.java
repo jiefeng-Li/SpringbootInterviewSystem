@@ -8,14 +8,21 @@ import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.model.dto.*;
+import com.cuit.interviewsystem.model.entity.BindingRequest;
+import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
+import com.cuit.interviewsystem.model.enums.UserBindingStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
+import com.cuit.interviewsystem.model.vo.BindingRequestVo;
 import com.cuit.interviewsystem.model.vo.PageVo;
 import com.cuit.interviewsystem.model.vo.UserVo;
+import com.cuit.interviewsystem.service.CompanyService;
+import com.cuit.interviewsystem.service.UserBindingRequestService;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.utils.JWTUtil;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +40,10 @@ import java.util.Objects;
 public class UserController {
     @Resource
     private UserService userService;
+    @Resource
+    private CompanyService companyService;
+    @Resource
+    private UserBindingRequestService bindingService;
     @Resource
     private JWTUtil jwtUtil;
 
@@ -236,4 +247,58 @@ public class UserController {
             return Result.error(ErrorEnum.NOT_FOUND_ERROR.getCode(), "更新失败，用户不存在");
         return Result.success();
     }
+
+    //region  招聘者绑定公司
+    @GetMapping("/binding/status")
+    public Result<?> getBindingStatus() {
+        record bindingStatusRecord(Integer status, String text) {}
+        List<bindingStatusRecord> res = new ArrayList<>();
+        for (UserBindingStatusEnum e : UserBindingStatusEnum.values()) {
+            res.add(new bindingStatusRecord(e.getStatus(), e.getText()));
+        }
+        return Result.success(res);
+    }
+
+    @GetMapping("/binding")
+    @AuthCheck(roles = {UserRoleEnum.RECRUITER})
+    public Result<BindingRequestVo> getBindingInfo(Long id) {
+        BindingRequest request = bindingService.getRequestById(id);
+        User requestUser = userService.getById(request.getUserId());
+        User reviewAdmin = userService.getById(request.getReviewedBy());
+        Company cmp = companyService.getCompanyById(request.getCompanyId());
+        BindingRequestVo res = new BindingRequestVo();
+        BeanUtils.copyProperties(request, res);
+        res.setUsername(requestUser.getUsername());
+        res.setUserPhone(DesensitizedUtil.mobilePhone(requestUser.getPhone()));
+        res.setReviewedByName(reviewAdmin.getUsername());
+        res.setCompanyName(cmp.getCompanyName());
+        return Result.success(res);
+    }
+
+    @PostMapping("/binding")
+    @AuthCheck(roles = {UserRoleEnum.RECRUITER})
+    public Result<?> addBindingCompany(BindingRequestDto bindingRequestDto) {
+        String token = bindingService.bindingCompany(bindingRequestDto);
+        return Result.success(token, "提交成功");
+    }
+
+    @PutMapping("/unbind/{id}")
+    @AuthCheck(roles = {UserRoleEnum.RECRUITER, UserRoleEnum.COMP_ADMIN})
+    public Result<?> unbindCompany(@PathVariable Long id) {
+        String newToken = bindingService.unbindCompany(id);
+        return newToken == null ? Result.error(ErrorEnum.SYSTEM_ERROR, "解绑失败") : Result.success(newToken, "解绑成功");
+    }
+
+    @GetMapping("/binding/list")
+//    @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
+    public Result<PageVo<?>> getBindingList(@Valid BindingRequestPageDto pageDto) {
+        Page<BindingRequestVo> page = bindingService.getBindingList(pageDto);
+        PageVo<BindingRequestVo> res = PageVo.of(page);
+        //手机号脱敏
+        res.getList().forEach(vo ->
+            vo.setUserPhone(DesensitizedUtil.mobilePhone(vo.getUserPhone()))
+        );
+        return Result.success(res);
+    }
+    //endregion
 }

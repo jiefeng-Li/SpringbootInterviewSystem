@@ -15,6 +15,8 @@ public interface CompanyService extends IService<Company> {
 
     int deleteCompanyById(Long id);
 
+    int deregisterCompanyById(Long id);
+
     String addOneCompany(CompanyAddDto cad);
 
     int updateCompanyById(Long id, CompanyInfoDto cid);

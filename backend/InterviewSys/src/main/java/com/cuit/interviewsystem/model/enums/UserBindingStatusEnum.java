@@ -1,9 +1,10 @@
 package com.cuit.interviewsystem.model.enums;
 
+
 import lombok.Getter;
 
 @Getter
-public enum CompanyCertificationStatusEnum {
+public enum UserBindingStatusEnum {
     REVIEWING(0, "待审"),
     PASS(1, "通过"),
     REFUSE(2, "驳回"),
@@ -11,13 +12,13 @@ public enum CompanyCertificationStatusEnum {
     private final Integer status;
     private final String text;
 
-    CompanyCertificationStatusEnum(Integer status, String text) {
+    UserBindingStatusEnum(Integer status, String text) {
         this.status = status;
         this.text = text;
     }
 
-    public static CompanyCertificationStatusEnum getEnum(Integer status) {
-        for (CompanyCertificationStatusEnum statusEnum : CompanyCertificationStatusEnum.values()) {
+    public static UserBindingStatusEnum getEnum(Integer status) {
+        for (UserBindingStatusEnum statusEnum : UserBindingStatusEnum.values()) {
             if (statusEnum.getStatus().equals(status)) {
                 return statusEnum;
             }
@@ -25,8 +26,8 @@ public enum CompanyCertificationStatusEnum {
         return null;
     }
 
-    public static CompanyCertificationStatusEnum getEnum(String text) {
-        for (CompanyCertificationStatusEnum statusEnum : CompanyCertificationStatusEnum.values()) {
+    public static UserBindingStatusEnum getEnum(String text) {
+        for (UserBindingStatusEnum statusEnum : UserBindingStatusEnum.values()) {
             if (statusEnum.getText().equals(text)) {
                 return statusEnum;
             }

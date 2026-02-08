@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.UserBindingRequestMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.BindingRequest">
+            <id property="id" column="id" />
+            <result property="userId" column="user_id" />
+            <result property="companyId" column="company_id" />
+            <result property="applicationNotes" column="application_notes" />
+            <result property="status" column="status" />
+            <result property="reviewedBy" column="reviewed_by" />
+            <result property="reviewNotes" column="review_notes" />
+            <result property="reviewedTime" column="reviewed_time" />
+            <result property="expiresAt" column="expires_at" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,company_id,application_notes,status,reviewed_by,
+        review_notes,reviewed_time,expires_at,is_deleted,create_time,
+        update_time
+    </sql>
+    <select id="getBindingPage" resultType="com.cuit.interviewsystem.model.vo.BindingRequestVo">
+        SELECT
+            binding.*,
+            user.username AS username,
+            user.phone AS user_phone,
+            company.company_name as company_name,
+            reviewer_user.username AS review_by_name
+        FROM t_binding_request binding
+        LEFT JOIN t_company company
+            ON binding.company_id = company.company_id
+                and  binding.company_id = #{dto.companyId}
+        LEFT JOIN t_user user
+            ON binding.user_id = user.user_id
+        LEFT JOIN t_user reviewer_user
+            ON binding.reviewed_by = reviewer_user.user_id
+        WHERE binding.is_deleted = #{dto.isDeleted}
+        <if test="dto.status != null">
+            and binding.status = #{dto.status}
+        </if>
+        <if test="dto.start != null">
+            and binding.create_time &gt;= #{dto.start}
+        </if>
+        <if test="dto.end != null">
+            and binding.create_time &lt;= #{dto.end}
+        </if>
+        ORDER BY binding.create_time DESC
+    </select>
+</mapper>

@@ -81,6 +81,8 @@ CREATE TABLE `t_binding_request` (
      `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
      `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
      PRIMARY KEY (`id`),
-     KEY `idx_applicant_id` (`user_id`),
-     KEY `idx_expires` (`expires_at`)
+     INDEX `idx_applicant_id` (`user_id`),
+     INDEX `idx_company_id` (`company_id`),
+     INDEX `idx_status` (`status`),
+     INDEX `idx_expires` (`expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='招聘者绑定公司申请记录表';
