@@ -3,16 +3,15 @@ package com.cuit.interviewsystem.service.impl;
 import cn.hutool.core.util.PhoneUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.CompanyMapper;
 import com.cuit.interviewsystem.mapper.UserMapper;
-import com.cuit.interviewsystem.model.dto.AdminReviewCertificationDto;
-import com.cuit.interviewsystem.model.dto.CertificationRecordPageDto;
-import com.cuit.interviewsystem.model.dto.CompanyCertificationRecordAddDto;
+import com.cuit.interviewsystem.model.dto.user.AdminReviewCertificationDto;
+import com.cuit.interviewsystem.model.dto.company.CertificationRecordPageDto;
+import com.cuit.interviewsystem.model.dto.company.CompanyCertificationRecordAddDto;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.CompanyCertificationRecord;
 import com.cuit.interviewsystem.model.entity.User;
@@ -24,18 +23,13 @@ import com.cuit.interviewsystem.mapper.CompanyCertificationRecordMapper;
 import com.cuit.interviewsystem.utils.JWTUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 
 /**

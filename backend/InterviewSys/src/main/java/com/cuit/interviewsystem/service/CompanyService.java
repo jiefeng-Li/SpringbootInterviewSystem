@@ -1,8 +1,8 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cuit.interviewsystem.model.dto.CompanyAddDto;
-import com.cuit.interviewsystem.model.dto.CompanyInfoDto;
+import com.cuit.interviewsystem.model.dto.company.CompanyAddDto;
+import com.cuit.interviewsystem.model.dto.company.CompanyInfoDto;
 import com.cuit.interviewsystem.model.entity.Company;
 
 /**

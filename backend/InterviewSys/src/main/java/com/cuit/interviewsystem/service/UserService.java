@@ -1,13 +1,13 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cuit.interviewsystem.common.Result;
-import com.cuit.interviewsystem.model.dto.*;
+import com.cuit.interviewsystem.model.dto.company.CommonUserRegister;
+import com.cuit.interviewsystem.model.dto.user.UserLoginDto;
+import com.cuit.interviewsystem.model.dto.user.UserPageDto;
+import com.cuit.interviewsystem.model.dto.user.UserRegisterDto;
+import com.cuit.interviewsystem.model.dto.user.UsersAddDto;
 import com.cuit.interviewsystem.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.springframework.web.bind.annotation.PostMapping;
-
-import java.util.List;
 
 /**
 * @author jiefe

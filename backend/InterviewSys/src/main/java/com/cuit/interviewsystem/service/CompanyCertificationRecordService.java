@@ -1,9 +1,9 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cuit.interviewsystem.model.dto.AdminReviewCertificationDto;
-import com.cuit.interviewsystem.model.dto.CertificationRecordPageDto;
-import com.cuit.interviewsystem.model.dto.CompanyCertificationRecordAddDto;
+import com.cuit.interviewsystem.model.dto.user.AdminReviewCertificationDto;
+import com.cuit.interviewsystem.model.dto.company.CertificationRecordPageDto;
+import com.cuit.interviewsystem.model.dto.company.CompanyCertificationRecordAddDto;
 import com.cuit.interviewsystem.model.entity.CompanyCertificationRecord;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cuit.interviewsystem.model.vo.CompanyCertificationRecordVo;

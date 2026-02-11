@@ -1,4 +1,4 @@
-package com.cuit.interviewsystem.model.dto;
+package com.cuit.interviewsystem.model.dto.company;
 
 import lombok.Data;
 

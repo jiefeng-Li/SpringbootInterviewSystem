@@ -1,13 +1,15 @@
-package com.cuit.interviewsystem.model.dto;
+package com.cuit.interviewsystem.model.dto.user;
 
 import com.sun.istack.NotNull;
 import com.sun.istack.Nullable;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 @Data
 public class BindingRequestDto implements Serializable {
+    @Serial
     private static final long serialVersionUID = -6479636872355358501L;
 
     /**

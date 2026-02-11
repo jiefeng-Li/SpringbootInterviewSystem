@@ -1,8 +1,9 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cuit.interviewsystem.model.dto.BindingRequestDto;
-import com.cuit.interviewsystem.model.dto.BindingRequestPageDto;
+import com.cuit.interviewsystem.model.dto.user.BindingRequestDto;
+import com.cuit.interviewsystem.model.dto.user.BindingRequestPageDto;
+import com.cuit.interviewsystem.model.dto.user.ReviewBindingRequestDto;
 import com.cuit.interviewsystem.model.entity.BindingRequest;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cuit.interviewsystem.model.vo.BindingRequestVo;
@@ -21,4 +22,8 @@ public interface UserBindingRequestService extends IService<BindingRequest> {
     Page<BindingRequestVo> getBindingList(BindingRequestPageDto pageDto);
 
     BindingRequest getRequestById(Long id);
+
+    int cancelBinding(Long id);
+
+    int reviewBindingRequest(Long id, ReviewBindingRequestDto dto);
 }

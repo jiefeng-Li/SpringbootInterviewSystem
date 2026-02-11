@@ -76,4 +76,6 @@ public class UserVo {
      * 用户所属公司ID
      */
     private Long companyId;
+
+    private String companyName;
 }

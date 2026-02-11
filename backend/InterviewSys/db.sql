@@ -33,6 +33,8 @@ CREATE TABLE `t_company` (
     `industry` varchar(100) DEFAULT NULL COMMENT '所属行业',
     `scale` varchar(20) DEFAULT NULL COMMENT '公司规模',
     `city` varchar(50) DEFAULT NULL COMMENT '所在城市',
+#     `longitude`  DECIMAL(10, 7) NULL COMMENT '经度', 后续扩展
+#     `latitude` DECIMAL(10, 7) NULL COMMENT '纬度', 后续扩展
     `status` tinyint NOT NULL DEFAULT '0' COMMENT '状态(0待审,1正常,2禁用,3注销)',
     `business_license_url` varchar(500) NOT NULL COMMENT '营业执照URL',
     `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除',
@@ -86,3 +88,35 @@ CREATE TABLE `t_binding_request` (
      INDEX `idx_status` (`status`),
      INDEX `idx_expires` (`expires_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='招聘者绑定公司申请记录表';
+
+
+-- 5. 创建核心职位表
+drop table if exists `t_job_position`;
+CREATE TABLE `t_job_position` (
+    `id` bigint NOT NULL AUTO_INCREMENT,
+    `company_id` bigint NOT NULL COMMENT '发布公司',
+    `title` varchar(200) NOT NULL COMMENT '职位标题',
+    `description` longtext NOT NULL COMMENT '职位描述',
+    `requirement` longtext NOT NULL COMMENT '职位要求',
+    `work_city` varchar(50) NOT NULL COMMENT '工作城市',
+    `job_type` tinyint NOT NULL DEFAULT '0 ' COMMENT '工作性质(0全职,1兼职,2实习,3远程 )',
+    `tags` varchar(512)  NULL COMMENT '职位标签{JSON数组}',
+    `min_salary` int DEFAULT NULL COMMENT '最低薪资',
+    `max_salary` int DEFAULT NULL COMMENT '最高薪资',
+    `experience` varchar(20) DEFAULT NULL COMMENT '经验要求',
+    `education` varchar(20) DEFAULT NULL COMMENT '学历要求',
+    `headcount` int NOT NULL DEFAULT '1' COMMENT '招聘人数',
+    `hiring_manager_id` bigint DEFAULT NULL COMMENT '负责人',
+    `status` tinyint NOT NULL DEFAULT '0' COMMENT '职位状态(0草稿,1招聘中,2已暂停,3已招满,4已关闭)',
+    `publish_time` datetime DEFAULT NULL COMMENT '发布时间',
+    `view_count` int NOT NULL DEFAULT '0' COMMENT '浏览量',
+    `apply_count` int NOT NULL DEFAULT '0' COMMENT '投递量',
+    `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_company_id` (`company_id`),
+    INDEX `idx_status_publish` (`status`, `publish_time` DESC),
+    INDEX `x_city_job_type` (`work_city`, `job_type`),
+    INDEX `idx_hiring_manager` (`hiring_manager_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='职位发布表';

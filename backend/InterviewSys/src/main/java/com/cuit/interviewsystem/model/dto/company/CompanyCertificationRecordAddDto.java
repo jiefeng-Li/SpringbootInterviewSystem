@@ -1,10 +1,15 @@
-package com.cuit.interviewsystem.model.dto;
+package com.cuit.interviewsystem.model.dto.company;
 
 
 import lombok.Data;
 
+import java.io.Serial;
+import java.io.Serializable;
+
 @Data
-public class CompanyCertificationRecordAddDto {
+public class CompanyCertificationRecordAddDto implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 6886969555309567646L;
     /**
      * 联系人
      */

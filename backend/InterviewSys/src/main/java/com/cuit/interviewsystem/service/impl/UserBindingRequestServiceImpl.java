@@ -9,8 +9,9 @@ import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.CompanyMapper;
 import com.cuit.interviewsystem.mapper.UserMapper;
-import com.cuit.interviewsystem.model.dto.BindingRequestDto;
-import com.cuit.interviewsystem.model.dto.BindingRequestPageDto;
+import com.cuit.interviewsystem.model.dto.user.BindingRequestDto;
+import com.cuit.interviewsystem.model.dto.user.BindingRequestPageDto;
+import com.cuit.interviewsystem.model.dto.user.ReviewBindingRequestDto;
 import com.cuit.interviewsystem.model.entity.BindingRequest;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.User;
@@ -120,9 +121,39 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
         return bindingMapper.selectById(id);
     }
 
+    @Override
+    public int cancelBinding(Long id) {
+        User curUser = jwtUtil.parseLoginUser();
+        BindingRequest target = bindingMapper.selectById(id);
+        ThrowUtil.throwIfTrue(target == null || target.getIsDeleted() == 1,
+                ErrorEnum.NOT_FOUND_ERROR, "申请不存在");
+        ThrowUtil.throwIfTrue(!Objects.equals(target.getUserId(), curUser.getUserId()),
+                ErrorEnum.UNAUTHORIZED, "无权限取消");
+        ThrowUtil.throwIfTrue(Objects.equals(target.getStatus(), UserBindingStatusEnum.CANCEL.getStatus()),
+                ErrorEnum.NOT_FOUND_ERROR, "申请已取消");
+        ThrowUtil.throwIfTrue(!Objects.equals(target.getStatus(), UserBindingStatusEnum.REVIEWING.getStatus()),
+                ErrorEnum.NOT_FOUND_ERROR, "申请已处理");
+        target.setStatus(UserBindingStatusEnum.CANCEL.getStatus());
+        return bindingMapper.updateById(target);
+    }
 
+    @Override
+    public int reviewBindingRequest(Long id, ReviewBindingRequestDto dto) {
+        ThrowUtil.throwIfTrue(!Objects.equals(dto.getId(), id), ErrorEnum.PARAMS_ERROR);
+        User curUser = jwtUtil.parseLoginUser();
+        BindingRequest target = bindingMapper.selectById(id);
+        UserBindingStatusEnum setStatus = UserBindingStatusEnum.getEnum(dto.getStatus());
+        ThrowUtil.throwIfTrue(setStatus == null || UserBindingStatusEnum.CANCEL.equals(setStatus), ErrorEnum.PARAMS_ERROR, "状态设置错误");
+        ThrowUtil.throwIfTrue(target == null || target.getIsDeleted() == 1, ErrorEnum.NOT_FOUND_ERROR, "申请不存在");
+        ThrowUtil.throwIfTrue(!Objects.equals(target.getStatus(), UserBindingStatusEnum.REVIEWING.getStatus()), ErrorEnum.PARAMS_ERROR, "申请已处理");
+        ThrowUtil.throwIfTrue(Objects.equals(target.getStatus(), UserBindingStatusEnum.CANCEL.getStatus()), ErrorEnum.NOT_FOUND_ERROR, "申请已取消");
+        ThrowUtil.throwIfTrue(!Objects.equals(curUser.getCompanyId(), target.getCompanyId()), ErrorEnum.UNAUTHORIZED, "无权限操作");
+        ThrowUtil.throwIfTrue(DateUtil.compare(new Date(), target.getExpiresAt()) > 0, ErrorEnum.PARAMS_ERROR, "申请已过期");
+        target.setReviewedBy(curUser.getUserId());
+        target.setReviewNotes(dto.getReviewNotes());
+        target.setStatus(setStatus.getStatus());
+        target.setReviewedTime(new Date());
+        target.setUpdateTime(new Date());
+        return bindingMapper.updateById(target);
+    }
 }
-
-
-
-

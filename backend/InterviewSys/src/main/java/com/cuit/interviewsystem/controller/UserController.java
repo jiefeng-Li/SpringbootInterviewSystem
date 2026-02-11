@@ -7,7 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.ErrorEnum;
-import com.cuit.interviewsystem.model.dto.*;
+import com.cuit.interviewsystem.model.dto.company.CommonUserRegister;
+import com.cuit.interviewsystem.model.dto.user.*;
 import com.cuit.interviewsystem.model.entity.BindingRequest;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.User;
@@ -157,6 +158,7 @@ public class UserController {
             resVo.setEmail(DesensitizedUtil.email(resVo.getEmail()));
             resVo.setAccountStatus(Objects.requireNonNull(UserAccountStatusEnum.getEnumByStatus(res.getAccountStatus())).getText());
             resVo.setRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(res.getRole())).getText());
+            resVo.setCompanyName(companyService.getCompanyById(res.getCompanyId()).getCompanyName());
         }
         return Result.success(resVo);
     }
@@ -280,6 +282,20 @@ public class UserController {
     public Result<?> addBindingCompany(BindingRequestDto bindingRequestDto) {
         String token = bindingService.bindingCompany(bindingRequestDto);
         return Result.success(token, "提交成功");
+    }
+
+    @PutMapping("/binding/{id}")
+    @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
+    public Result<?> reviewBindingRequest(@PathVariable Long id, @Valid ReviewBindingRequestDto dto) {
+        int i = bindingService.reviewBindingRequest(id, dto);
+        return i == 0 ? Result.error(ErrorEnum.SYSTEM_ERROR, "审核失败") : Result.success(null, "审核成功");
+    }
+
+    @DeleteMapping("/binding/cancel/{id}")
+    @AuthCheck(roles = {UserRoleEnum.RECRUITER})
+    public Result<?> cancelBindingCompany(@PathVariable Long id) {
+        int i = bindingService.cancelBinding(id);
+        return i == 0 ? Result.error(ErrorEnum.SYSTEM_ERROR, "取消失败") : Result.success(null, "取消成功");
     }
 
     @PutMapping("/unbind/{id}")

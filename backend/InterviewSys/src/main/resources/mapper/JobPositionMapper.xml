@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.JobPositionMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.JobPosition">
+            <id property="id" column="id" />
+            <result property="companyId" column="company_id" />
+            <result property="title" column="title" />
+            <result property="description" column="description" />
+            <result property="requirement" column="requirement" />
+            <result property="workCity" column="work_city" />
+            <result property="jobType" column="job_type" />
+            <result property="tags" column="tags"/>
+            <result property="minSalary" column="min_salary" />
+            <result property="maxSalary" column="max_salary" />
+            <result property="experience" column="experience" />
+            <result property="education" column="education" />
+            <result property="headcount" column="headcount" />
+            <result property="hiringManagerId" column="hiring_manager_id" />
+            <result property="status" column="status" />
+            <result property="publishTime" column="publish_time" />
+            <result property="viewCount" column="view_count" />
+            <result property="applyCount" column="apply_count" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,company_id,title,description,requirement,work_city,
+        job_type,tags,min_salary,max_salary,experience,education,
+        headcount,hiring_manager_id,status,publish_time,view_count,
+        apply_count,is_deleted,create_time,update_time
+    </sql>
+</mapper>
