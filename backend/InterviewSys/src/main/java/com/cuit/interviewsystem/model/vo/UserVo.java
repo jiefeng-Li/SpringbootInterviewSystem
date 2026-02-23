@@ -1,8 +1,15 @@
 package com.cuit.interviewsystem.model.vo;
 
+import cn.hutool.core.util.DesensitizedUtil;
+import cn.hutool.core.util.PhoneUtil;
+import com.cuit.interviewsystem.model.entity.User;
+import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
+import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import lombok.Data;
+import org.springframework.beans.BeanUtils;
 
 import java.util.Date;
+import java.util.Objects;
 
 
 @Data
@@ -78,4 +85,17 @@ public class UserVo {
     private Long companyId;
 
     private String companyName;
+
+    public static UserVo objToVo(User user) {
+        if (user == null) {
+            return null;
+        }
+        UserVo res = new UserVo();
+        BeanUtils.copyProperties(user, res);
+        res.setPhone(DesensitizedUtil.mobilePhone(res.getPhone()));
+        res.setEmail(DesensitizedUtil.email(res.getEmail()));
+        res.setAccountStatus(Objects.requireNonNull(UserAccountStatusEnum.getEnumByStatus(user.getAccountStatus())).getText());
+        res.setRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(res.getRole())).getText());
+        return res;
+    }
 }

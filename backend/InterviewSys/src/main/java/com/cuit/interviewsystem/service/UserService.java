@@ -33,4 +33,6 @@ public interface UserService extends IService<User> {
     long commonUserRegister(CommonUserRegister cur);
 
     Page<User> getUsers(UserPageDto conditions);
+
+    User getCurrentUser();
 }

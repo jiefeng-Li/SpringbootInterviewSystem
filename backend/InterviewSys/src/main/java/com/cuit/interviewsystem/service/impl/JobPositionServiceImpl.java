@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.ErrorEnum;
-import com.cuit.interviewsystem.model.dto.UpdateJobDto;
+import com.cuit.interviewsystem.model.dto.job.UpdateJobDto;
 import com.cuit.interviewsystem.model.dto.job.AddJobDto;
 import com.cuit.interviewsystem.model.dto.job.JobSearchPageDto;
 import com.cuit.interviewsystem.model.entity.JobPosition;
@@ -51,6 +51,7 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
                 .eq(dto.getJobType() != null, JobPosition::getJobType, dto.getJobType())
                 .eq(dto.getStatus() != null, JobPosition::getStatus, dto.getStatus())
                 .eq(dto.getExperience() != null, JobPosition::getExperience, dto.getExperience())
+                .eq(dto.getHiringManagerId() != null, JobPosition::getHiringManagerId, dto.getHiringManagerId())
                 .eq(dto.getEducation() != null, JobPosition::getEducation, dto.getEducation())
                 .ge(dto.getMinSalary() != null, JobPosition::getMinSalary, dto.getMinSalary())
                 .le(dto.getMaxSalary() != null, JobPosition::getMaxSalary, dto.getMaxSalary())
@@ -117,6 +118,17 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
         }
         target.setJobType(jobTypeEnum);
         target.setUpdateTime(new Date());
+        return jobPositionMapper.updateById(target);
+    }
+
+    @Override
+    public int deleteJobPosition(Long id) {
+        User curUser = jwtUtil.parseLoginUser();
+        JobPosition target = jobPositionMapper.selectById(id);
+        ThrowUtil.throwIfTrue(target == null || target.getIsDeleted() == 1,
+                ErrorEnum.NOT_FOUND_ERROR, "职位不存在或已被删除");
+        ThrowUtil.throwIfTrue(!Objects.equals(target.getCompanyId(), curUser.getCompanyId()), ErrorEnum.UNAUTHORIZED);
+        target.setIsDeleted(1);
         return jobPositionMapper.updateById(target);
     }
 }

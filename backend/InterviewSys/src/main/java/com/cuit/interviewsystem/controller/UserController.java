@@ -116,6 +116,14 @@ public class UserController {
     }
 
 
+    @GetMapping("/current")
+    public Result<UserVo> getCurrentUser() {
+        User user = userService.getCurrentUser();
+
+        return null;
+    }
+
+
     /**
      *
      * @return 用户角色类型
@@ -150,14 +158,8 @@ public class UserController {
     @GetMapping
     public Result<UserVo> getOneUser(User conditions) {
         User res = userService.getOneUser(conditions);
-        UserVo resVo = null;
-        if (res != null) {
-            resVo = new UserVo();
-            BeanUtils.copyProperties(res, resVo);
-            resVo.setPhone(DesensitizedUtil.mobilePhone(resVo.getPhone()));
-            resVo.setEmail(DesensitizedUtil.email(resVo.getEmail()));
-            resVo.setAccountStatus(Objects.requireNonNull(UserAccountStatusEnum.getEnumByStatus(res.getAccountStatus())).getText());
-            resVo.setRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(res.getRole())).getText());
+        UserVo resVo = UserVo.objToVo(res);;
+        if (resVo != null) {
             resVo.setCompanyName(companyService.getCompanyById(res.getCompanyId()).getCompanyName());
         }
         return Result.success(resVo);
@@ -170,12 +172,8 @@ public class UserController {
         List<User> records = users.getRecords();
         List<UserVo> res = new ArrayList<>();
         for (User u : records) {
-            UserVo userVo = new UserVo();
-            BeanUtils.copyProperties(u, userVo);
-            userVo.setPhone(DesensitizedUtil.mobilePhone(userVo.getPhone()));
-            userVo.setEmail(DesensitizedUtil.email(userVo.getEmail()));
-            userVo.setAccountStatus(UserAccountStatusEnum.getEnumByStatus(u.getAccountStatus()).getText());
-            userVo.setRole(UserRoleEnum.getEnumByValue(u.getRole()).getText());
+            UserVo userVo = UserVo.objToVo(u);
+            userVo.setCompanyName(companyService.getCompanyById(u.getCompanyId()).getCompanyName());
             res.add(userVo);
         }
         PageVo<UserVo> pageVo = new PageVo<>();

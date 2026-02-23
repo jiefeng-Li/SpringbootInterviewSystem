@@ -118,6 +118,22 @@
         </dependency>
         <!--endregion-->
 
+
+        <!-- region flying-saucer(html->pdf) https://mvnrepository.com/artifact/org.xhtmlrenderer/flying-saucer-core -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-core</artifactId>
+            <version>9.13.3</version>
+            <scope>compile</scope>
+        </dependency>
+        <!--endregion-->
+
+        <!-- region thymeleaf -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <!--endregion-->
     </dependencies>
 
     <build>

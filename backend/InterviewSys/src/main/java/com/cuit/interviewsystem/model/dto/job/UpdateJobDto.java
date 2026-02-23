@@ -1,6 +1,6 @@
-package com.cuit.interviewsystem.model.dto;
+package com.cuit.interviewsystem.model.dto.job;
 
-import com.cuit.interviewsystem.model.enums.JobTypeEnum;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.io.Serial;
@@ -14,6 +14,7 @@ public class UpdateJobDto implements Serializable {
     /**
      * 职位标题
      */
+    @NotBlank(message = "职位标题不能为空")
     private String title;
 
     /**

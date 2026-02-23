@@ -25,6 +25,7 @@ public class JobSearchPageDto extends PageDto implements Serializable {
     private Integer maxSalary;
     private String experience;
     private String education;
+    private Long hiringManagerId;
     private Integer status;
     /**
      * 公司规模

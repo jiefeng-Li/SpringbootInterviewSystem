@@ -1,7 +1,7 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cuit.interviewsystem.model.dto.UpdateJobDto;
+import com.cuit.interviewsystem.model.dto.job.UpdateJobDto;
 import com.cuit.interviewsystem.model.dto.job.AddJobDto;
 import com.cuit.interviewsystem.model.dto.job.JobSearchPageDto;
 import com.cuit.interviewsystem.model.entity.JobPosition;
@@ -23,4 +23,6 @@ public interface JobPositionService extends IService<JobPosition> {
     int updateJobStatus(Long id, Integer status);
 
     int updateJobPosition(UpdateJobDto updateJobDto, Long id);
+
+    int deleteJobPosition(Long id);
 }

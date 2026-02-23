@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.ResumeMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.Resume">
+            <id property="id" column="id" />
+            <result property="user_id" column="user_id" />
+            <result property="template_id" column="template_id" />
+            <result property="name" column="name" />
+            <result property="gender" column="gender" />
+            <result property="birthday" column="birthday" />
+            <result property="phone" column="phone" />
+            <result property="email" column="email" />
+            <result property="address" column="address" />
+            <result property="avatar" column="avatar" />
+            <result property="city" column="city" />
+            <result property="summary" column="summary" />
+            <result property="is_default" column="is_default" />
+            <result property="create_time" column="create_time" />
+            <result property="update_time" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,template_id,name,gender,birthday,
+        phone,email,address,avatar,city,
+        summary,is_default,create_time,update_time
+    </sql>
+</mapper>

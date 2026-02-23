@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.ResumeProjectMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.ResumeProject">
+            <id property="id" column="id" />
+            <result property="resume_id" column="resume_id" />
+            <result property="name" column="name" />
+            <result property="description" column="description" />
+            <result property="start_date" column="start_date" />
+            <result property="end_date" column="end_date" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,resume_id,name,description,start_date,end_date
+    </sql>
+</mapper>

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.ErrorEnum;
-import com.cuit.interviewsystem.model.dto.UpdateJobDto;
+import com.cuit.interviewsystem.model.dto.job.UpdateJobDto;
 import com.cuit.interviewsystem.model.dto.job.AddJobDto;
 import com.cuit.interviewsystem.model.dto.job.JobSearchPageDto;
 import com.cuit.interviewsystem.model.entity.JobPosition;
@@ -42,10 +42,18 @@ public class JobPositionController {
                 Result.error(ErrorEnum.SYSTEM_ERROR) : Result.success("添加成功");
     }
 
+    @DeleteMapping("/{id}")
+    @AuthCheck(roles = {UserRoleEnum.RECRUITER, UserRoleEnum.COMP_ADMIN})
+    public Result<?> deleteJobPosition(@PathVariable Long id){
+        return jobPositionService.deleteJobPosition(id) == 0 ?
+                Result.error(ErrorEnum.SYSTEM_ERROR) : Result.success("删除成功");
+    }
+
     @PutMapping("/{id}")
     @AuthCheck(roles = {UserRoleEnum.RECRUITER})
     public Result<?> updateJobPosition(@Valid UpdateJobDto updateJobDto, @PathVariable Long id){
         int i = jobPositionService.updateJobPosition(updateJobDto, id);
+        return i == 0 ? Result.error(ErrorEnum.SYSTEM_ERROR) : Result.success("更新成功");
     }
 
     @GetMapping("")
@@ -85,4 +93,7 @@ public class JobPositionController {
         r.setRecords(list);
         return Result.success(PageVo.of(r));
     }
+
+
+
 }

@@ -120,3 +120,65 @@ CREATE TABLE `t_job_position` (
     INDEX `x_city_job_type` (`work_city`, `job_type`),
     INDEX `idx_hiring_manager` (`hiring_manager_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='职位发布表';
+
+-- 6. 简历主表基本信息
+drop table if exists `t_resume`;
+CREATE TABLE `t_resume`(
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '简历ID',
+    `user_id` bigint NOT NULL COMMENT '用户ID',
+    `template_id` int NOT NULL COMMENT '简历模板ID',
+    `name` varchar(50) NOT NULL COMMENT '姓名',
+    `gender` tinyint NOT NULL COMMENT '性别(0男,1女,2保密)',
+    `birthday` date DEFAULT NULL COMMENT '出生日期',
+    `phone` varchar(20) NOT NULL COMMENT '手机号',
+    `email` varchar(100) NOT NULL COMMENT '邮箱',
+    `address` varchar(200) DEFAULT NULL COMMENT '现居地址',
+    `avatar` varchar(200) DEFAULT NULL COMMENT '头像',
+    `city` varchar(50) DEFAULT NULL COMMENT '期望工作城市',
+    `summary` varchar(500) DEFAULT NULL COMMENT '个人简介/求职意向',
+    `is_default` tinyint NOT NULL COMMENT '是否默认简历（用于多份简历管理）',
+    `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (`id`),
+    INDEX `idx_user_id` (`user_id`)
+);
+-- 6.1 教育经历表关联简历表
+drop table if exists `t_resume_education`;
+CREATE TABLE `t_resume_education`(
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `resume_id` bigint NOT NULL COMMENT '简历ID',
+    `school` varchar(100) NOT NULL COMMENT '学校名称',
+    `major` varchar(100) NOT NULL COMMENT '专业',
+    `degree` varchar(20) NOT NULL COMMENT '学历',
+    `start_date` datetime NOT NULL COMMENT '开始时间',
+    `end_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '毕业时间（或至今）',
+    `description` TEXT COMMENT '在校经历、荣誉等',
+    PRIMARY KEY (`id`),
+    INDEX `idx_resume_id` (`resume_id`)
+);
+-- 6.2 工作经历表关联简历表
+drop table if exists `t_resume_experience`;
+CREATE TABLE `t_resume_experience`(
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `resume_id` bigint NOT NULL COMMENT '简历ID',
+    `company` varchar(100) NOT NULL COMMENT '公司名称',
+    `position` varchar(100) NOT NULL COMMENT '职位名称',
+    `start_date` datetime NOT NULL COMMENT '开始时间',
+    `end_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '结束时间（或至今）',
+    `description` TEXT COMMENT '工作内容、业绩等',
+    PRIMARY KEY (`id`),
+    INDEX `idx_resume_id` (`resume_id`)
+);
+-- 6.3 项目经历表关联简历表
+drop table if exists `t_resume_project`;
+CREATE TABLE `t_resume_project`(
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
+    `resume_id` bigint NOT NULL COMMENT '简历ID',
+    `name` varchar(100) NOT NULL COMMENT '项目名称',
+    `description` TEXT COMMENT '项目描述',
+    `start_date` datetime NOT NULL COMMENT '开始时间',
+    `end_date` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '结束时间（或至今）',
+    PRIMARY KEY (`id`),
+    INDEX `idx_resume_id` (`resume_id`)
+ );

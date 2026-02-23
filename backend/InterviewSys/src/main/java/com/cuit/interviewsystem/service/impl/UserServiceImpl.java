@@ -126,6 +126,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userMapper.selectPage(page, lambdaQueryWrapper);
     }
 
+    @Override
+    public User getCurrentUser() {
+        Long userId = jwtUtil.parseLoginUser().getUserId();
+        return userMapper.selectById(userId);
+    }
+
     /**
      * 通用用户登录
      *
