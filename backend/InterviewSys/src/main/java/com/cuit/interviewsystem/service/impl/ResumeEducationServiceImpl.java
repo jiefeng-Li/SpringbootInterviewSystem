@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 * @createDate 2026-02-23 21:03:31
 */
 @Service
-@Deprecated
 public class ResumeEducationServiceImpl extends ServiceImpl<ResumeEducationMapper, ResumeEducation>
     implements ResumeEducationService{
 

@@ -6,8 +6,8 @@
 
     <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.Resume">
             <id property="id" column="id" />
-            <result property="user_id" column="user_id" />
-            <result property="template_id" column="template_id" />
+            <result property="userId" column="user_id" />
+            <result property="templateId" column="template_id" />
             <result property="name" column="name" />
             <result property="gender" column="gender" />
             <result property="birthday" column="birthday" />
@@ -17,9 +17,49 @@
             <result property="avatar" column="avatar" />
             <result property="city" column="city" />
             <result property="summary" column="summary" />
-            <result property="is_default" column="is_default" />
-            <result property="create_time" column="create_time" />
-            <result property="update_time" column="update_time" />
+            <result property="isDefault" column="is_default" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <resultMap id="ResumeVoResultMap" type="com.cuit.interviewsystem.model.vo.ResumeVo">
+        <id property="id" column="id" />
+        <result property="userId" column="user_id" />
+        <result property="templateId" column="template_id" />
+        <result property="name" column="name" />
+        <result property="gender" column="gender" />
+        <result property="birthday" column="birthday" />
+        <result property="phone" column="phone" />
+        <result property="email" column="email" />
+        <result property="address" column="address" />
+        <result property="avatar" column="avatar" />
+        <result property="city" column="city" />
+        <result property="summary" column="summary" />
+        <result property="isDefault" column="is_default" />
+        <result property="createTime" column="create_time" />
+        <collection property="educations" ofType="com.cuit.interviewsystem.model.vo.ResumeEducationVo">
+            <id property="id" column="edu_id" />
+            <result property="school" column="edu_school" />
+            <result property="major" column="edu_major" />
+            <result property="degree" column="edu_degree" />
+            <result property="startDate" column="edu_start_date" />
+            <result property="endDate" column="edu_end_date" />
+        </collection>
+        <collection property="experiences" ofType="com.cuit.interviewsystem.model.vo.ResumeExperienceVo">
+            <id property="id" column="exp_id" />
+            <result property="company" column="exp_company" />
+            <result property="position" column="exp_position" />
+            <result property="startDate" column="exp_start_date" />
+            <result property="endDate" column="exp_end_date" />
+            <result property="description" column="exp_description" />
+        </collection>
+        <collection property="projects" ofType="com.cuit.interviewsystem.model.vo.ResumeProjectVo">
+            <id property="id" column="pro_id" />
+            <result property="name" column="pro_name" />
+            <result property="description" column="pro_description" />
+            <result property="startDate" column="pro_start_date" />
+            <result property="endDate" column="pro_end_date" />
+        </collection>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -27,4 +67,50 @@
         phone,email,address,avatar,city,
         summary,is_default,create_time,update_time
     </sql>
+
+    <sql id="Education_Column_List">
+        id as edu_id, resume_id as edu_resume_id, school, major, degree,
+        start_date, end_date, is_deleted as edu_is_deleted
+    </sql>
+
+    <sql id="ResumeVo_Column_List">
+            r.*,
+            e.id as edu_id,
+            e.school as edu_school,
+            e.major as edu_major,
+            e.degree as edu_degree,
+            e.start_date as edu_start_date,
+            e.end_date as edu_end_date,
+            ex.id as exp_id,
+            ex.company as exp_company,
+            ex.position as exp_position,
+            ex.start_date as exp_start_date,
+            ex.end_date as exp_end_date,
+            ex.description as exp_description,
+            pro.id as pro_id,
+            pro.name as pro_name,
+            pro.description as pro_description,
+            pro.start_date as pro_start_date,
+            pro.end_date as pro_end_date
+    </sql>
+
+    <select id="getResumesByUserId" resultMap="ResumeVoResultMap">
+        SELECT
+            <include refid="ResumeVo_Column_List" />
+        FROM t_resume r
+        LEFT JOIN t_resume_education e ON r.id = e.resume_id
+        LEFT JOIN t_resume_experience ex ON r.id = ex.resume_id
+        LEFT JOIN t_resume_project pro ON r.id = pro.resume_id
+        WHERE r.user_id = #{userId} AND r.is_deleted = 0
+        ORDER BY r.create_time DESC
+    </select>
+    <select id="selectVoById" resultType="com.cuit.interviewsystem.model.vo.ResumeVo">
+        SELECT
+            <include refid="ResumeVo_Column_List" />
+        FROM t_resume r
+        LEFT JOIN t_resume_education e ON r.id = e.resume_id
+        LEFT JOIN t_resume_experience ex ON r.id = ex.resume_id
+        LEFT JOIN t_resume_project pro ON r.id = pro.resume_id
+        WHERE r.id = #{id} AND r.is_deleted = 0
+    </select>
 </mapper>

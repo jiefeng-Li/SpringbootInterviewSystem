@@ -6,12 +6,12 @@
 
     <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.ResumeEducation">
             <id property="id" column="id" />
-            <result property="resume_id" column="resume_id" />
+            <result property="resumeId" column="resume_id" />
             <result property="school" column="school" />
             <result property="major" column="major" />
             <result property="degree" column="degree" />
-            <result property="start_date" column="start_date" />
-            <result property="end_date" column="end_date" />
+            <result property="startDate" column="start_date" />
+            <result property="endDate" column="end_date" />
             <result property="description" column="description" />
     </resultMap>
 

@@ -6,11 +6,11 @@
 
     <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.ResumeProject">
             <id property="id" column="id" />
-            <result property="resume_id" column="resume_id" />
+            <result property="resumeId" column="resume_id" />
             <result property="name" column="name" />
             <result property="description" column="description" />
-            <result property="start_date" column="start_date" />
-            <result property="end_date" column="end_date" />
+            <result property="startDate" column="start_date" />
+            <result property="endDate" column="end_date" />
     </resultMap>
 
     <sql id="Base_Column_List">

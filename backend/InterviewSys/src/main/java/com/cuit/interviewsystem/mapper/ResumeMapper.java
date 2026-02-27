@@ -1,7 +1,10 @@
 package com.cuit.interviewsystem.mapper;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.model.entity.Resume;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.cuit.interviewsystem.model.vo.ResumeVo;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -13,6 +16,9 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface ResumeMapper extends BaseMapper<Resume> {
 
+    IPage<ResumeVo> getResumesByUserId(Page<ResumeVo> page, Long userId);
+
+    ResumeVo selectVoById(Long id);
 }
 
 
