@@ -4,12 +4,16 @@ import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
+import com.cuit.interviewsystem.mapper.JobApplicationMapper;
 import com.cuit.interviewsystem.model.dto.job.UpdateJobDto;
 import com.cuit.interviewsystem.model.dto.job.AddJobDto;
 import com.cuit.interviewsystem.model.dto.job.JobSearchPageDto;
+import com.cuit.interviewsystem.model.entity.JobApplication;
 import com.cuit.interviewsystem.model.entity.JobPosition;
 import com.cuit.interviewsystem.model.entity.User;
+import com.cuit.interviewsystem.model.enums.JobApplicationStatusEnum;
 import com.cuit.interviewsystem.model.enums.JobPositionStatusEnum;
 import com.cuit.interviewsystem.model.enums.JobTypeEnum;
 import com.cuit.interviewsystem.service.JobPositionService;
@@ -33,6 +37,8 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
     implements JobPositionService{
     @Resource
     private JobPositionMapper jobPositionMapper;
+    @Resource
+    private JobApplicationMapper jobApplicationMapper;
     @Resource
     private JWTUtil jwtUtil;
 
@@ -128,6 +134,16 @@ public class JobPositionServiceImpl extends ServiceImpl<JobPositionMapper, JobPo
         ThrowUtil.throwIfTrue(target == null || target.getIsDeleted() == 1,
                 ErrorEnum.NOT_FOUND_ERROR, "职位不存在或已被删除");
         ThrowUtil.throwIfTrue(!Objects.equals(target.getCompanyId(), curUser.getCompanyId()), ErrorEnum.UNAUTHORIZED);
+        if (jobApplicationMapper.exists(new LambdaQueryWrapper<JobApplication>()
+                .eq(JobApplication::getJobPositionId, id)
+                .eq(JobApplication::getIsDeleted, 0)
+                .notIn(JobApplication::getStatus,
+                        JobApplicationStatusEnum.ELIMINATED.getStatus(),
+                        JobApplicationStatusEnum.HIRED.getStatus(),
+                        JobApplicationStatusEnum.PENDING.getStatus(),
+                        JobApplicationStatusEnum.HIRED.getStatus()))) {
+            throw new BusinessException(ErrorEnum.PARAMS_ERROR, "有待处理的申请，无法删除");
+        }
         target.setIsDeleted(1);
         return jobPositionMapper.updateById(target);
     }

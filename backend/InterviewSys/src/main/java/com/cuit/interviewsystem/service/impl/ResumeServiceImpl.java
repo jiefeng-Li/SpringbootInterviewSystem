@@ -6,18 +6,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
-import com.cuit.interviewsystem.mapper.ResumeEducationMapper;
-import com.cuit.interviewsystem.mapper.ResumeExperienceMapper;
-import com.cuit.interviewsystem.mapper.ResumeProjectMapper;
+import com.cuit.interviewsystem.mapper.*;
 import com.cuit.interviewsystem.model.dto.resume.*;
 import com.cuit.interviewsystem.model.entity.*;
+import com.cuit.interviewsystem.model.enums.JobApplicationStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.ResumeVo;
-import com.cuit.interviewsystem.service.ResumeEducationService;
-import com.cuit.interviewsystem.service.ResumeExperienceService;
-import com.cuit.interviewsystem.service.ResumeProjectService;
-import com.cuit.interviewsystem.service.ResumeService;
-import com.cuit.interviewsystem.mapper.ResumeMapper;
+import com.cuit.interviewsystem.service.*;
 import com.cuit.interviewsystem.utils.JWTUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
@@ -53,6 +48,8 @@ public class ResumeServiceImpl extends ServiceImpl<ResumeMapper, Resume>
     private ResumeProjectMapper projectMapper;
     @Resource
     private ResumeProjectService projectService;
+    @Resource
+    private JobApplicationMapper jobApplicationMapper;
 
     @Override
     @Transactional
@@ -100,6 +97,16 @@ public class ResumeServiceImpl extends ServiceImpl<ResumeMapper, Resume>
         User curUser = jwtUtil.parseLoginUser();
         if (!resume.getUserId().equals(curUser.getUserId()) && !UserRoleEnum.SYS_ADMIN.getValue().equals(curUser.getRole()))
             throw new BusinessException(ErrorEnum.UNAUTHORIZED, "无权限删除");
+        if (jobApplicationMapper.exists(new LambdaQueryWrapper<JobApplication>()
+                .eq(JobApplication::getResumeId, id)
+                .eq(JobApplication::getIsDeleted, 0)
+                .notIn(JobApplication::getStatus,
+                        JobApplicationStatusEnum.ELIMINATED.getStatus(),
+                        JobApplicationStatusEnum.HIRED.getStatus(),
+                        JobApplicationStatusEnum.PENDING.getStatus(),
+                        JobApplicationStatusEnum.HIRED.getStatus()))) {
+            throw new BusinessException(ErrorEnum.PARAMS_ERROR, "简历已被申请，无法删除");
+        }
         resumeMapper.deleteById(id);
     }
 

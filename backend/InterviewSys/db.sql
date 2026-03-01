@@ -182,3 +182,28 @@ CREATE TABLE `t_resume_project`(
     PRIMARY KEY (`id`),
     INDEX `idx_resume_id` (`resume_id`)
  );
+
+drop table if exists `t_job_application`;
+CREATE TABLE `t_job_application` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '投递记录ID',
+    `company_id` bigint NOT NULL COMMENT '投递的公司',
+    `job_position_id` bigint NOT NULL COMMENT '职位ID',
+    `user_id` bigint NOT NULL COMMENT '求职者用户ID',
+    `resume_id` bigint DEFAULT NULL COMMENT '投递时使用的简历ID',
+    `apply_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '投递时间',
+    `status` tinyint NOT NULL DEFAULT '0' COMMENT '状态(0待处理,1已查看,2初筛通过,3初筛不通过,4面试中,5已发Offer,6已录用,7已淘汰)',
+#     `type` tinyint NOT NULL DEFAULT '1' COMMENT '类型(1主动投递,2HR邀请,3内部推荐)',
+#     `source` varchar(50) DEFAULT NULL COMMENT '来源渠道',
+    `cover_letter` text COMMENT '求职信',
+    `remarks` text COMMENT 'HR备注',
+    `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除',
+    `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `update_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_job_position_id` (`job_position_id`),
+    kEY `idx_company_id` (`company_id`),
+    KEY `idx_user_id` (`user_id`),
+    KEY `idx_status` (`status`),
+    KEY `idx_apply_time` (`apply_time`),
+    KEY `idx_job_user` (`job_position_id`, `user_id`) -- 联合索引，加速查重
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='简历投递记录表';
