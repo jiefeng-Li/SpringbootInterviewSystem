@@ -19,9 +19,48 @@
             <result property="updateTime" column="update_time" />
     </resultMap>
 
+    <resultMap id="JobApplicationVoResultMap" type="com.cuit.interviewsystem.model.vo.JobApplicationVo">
+        <id property="id" column="id" />
+        <result property="companyId" column="company_id" />
+        <result property="jobPositionId" column="job_position_id" />
+        <result property="userId" column="user_id" />
+        <result property="resumeId" column="resume_id" />
+        <result property="applyTime" column="apply_time" />
+        <result property="status" column="status" />
+        <result property="coverLetter" column="cover_letter" />
+        <result property="remarks" column="remarks" />
+        <result property="jobTitle" column="job_title" />
+    </resultMap>
+
     <sql id="Base_Column_List">
         id,company_id,job_position_id,user_id,resume_id,apply_time,
         status,cover_letter,remarks,is_deleted,create_time,
         update_time
     </sql>
+    <select id="getJobApplicationPage" resultType="com.cuit.interviewsystem.model.vo.JobApplicationVo">
+        SELECT
+            apply.id,
+            apply.company_id,
+            apply.job_position_id,
+            apply.user_id,
+            apply.resume_id,
+            apply.apply_time,
+            apply.status,
+            apply.cover_letter,
+            apply.remarks,
+            position.title AS job_title
+        FROM t_job_application apply
+        LEFT JOIN t_job_position position ON apply.job_position_id = position.id
+        WHERE apply.is_deleted = 0
+        <if test="dto.companyId != null">
+            AND apply.company_id = #{dto.companyId}
+        </if>
+        <if test="dto.jobPositionId != null">
+            AND apply.job_position_id = #{dto.jobPositionId}
+        </if>
+        <if test="dto.status != null">
+            AND apply.status = #{dto.status}
+        </if>
+        ORDER BY apply.apply_time DESC
+    </select>
 </mapper>

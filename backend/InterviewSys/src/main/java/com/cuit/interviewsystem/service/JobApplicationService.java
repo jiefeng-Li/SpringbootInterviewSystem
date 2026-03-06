@@ -1,6 +1,8 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cuit.interviewsystem.model.dto.UpdateJobApplicationDto;
+import com.cuit.interviewsystem.model.dto.jobApplication.AddJobApplicationDto;
 import com.cuit.interviewsystem.model.dto.jobApplication.JobApplicationPageDto;
 import com.cuit.interviewsystem.model.entity.JobApplication;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -14,4 +16,12 @@ import com.cuit.interviewsystem.model.vo.JobApplicationVo;
 public interface JobApplicationService extends IService<JobApplication> {
 
     Page<JobApplicationVo> getJobApplicationList(JobApplicationPageDto jobApplicationPageDto);
+
+    void addJobApplication(AddJobApplicationDto addJobApplicationDto);
+
+    int deleteJobApplication(Long id);
+
+    int updateJobApplicationStatus(UpdateJobApplicationDto jobApplication);
+
+    JobApplicationVo getJobApplicationById(Long id);
 }

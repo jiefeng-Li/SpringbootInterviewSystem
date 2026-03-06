@@ -21,10 +21,33 @@ public enum JobApplicationStatusEnum {
 
     private final Integer status;
     private final String text;
+    private static final int[][] STATUS_TRANSITION_MATRIX = {
+            // 待处理->已查看 待处理->初筛通过 待处理->初筛不通过
+            {0, 1, 1, 1, 0, 0, 0, 0},
+            // 已查看->已查看 已查看->初筛通过 已查看->初筛不通过
+            {0, 1, 1, 1, 0, 0, 0, 0},
+            // 初筛通过->面试中
+            {0, 0, 1, 0, 1, 0, 0, 0},
+            // 初筛不通过
+            {0, 0, 0, 1, 0, 0, 0, 1},
+            // 面试中->已发Offer 面试中->已淘汰
+            {0, 0, 0, 0, 1, 1, 0, 1},
+            // 已发Offer->已录用 已发Offer->已淘汰(拒绝)
+            {0, 0, 0, 0, 0, 1, 1, 1},
+            // 已录用
+            {0, 0, 0, 0, 0, 0, 1, 0},
+            // 已淘汰
+            {0, 0, 0, 0, 0, 0, 0, 1}
+    };
+
 
     JobApplicationStatusEnum(Integer status, String text) {
         this.status = status;
         this.text = text;
+    }
+
+    public static boolean checkStatus(Integer from, Integer to) {
+        return STATUS_TRANSITION_MATRIX[from][to] == 1;
     }
 
 

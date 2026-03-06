@@ -34,6 +34,7 @@ public class JobApplicationVo {
     /**
      * 投递时使用的简历ID
      */
+    private Long resumeId;
     private ResumeVo resume;
 
     /**

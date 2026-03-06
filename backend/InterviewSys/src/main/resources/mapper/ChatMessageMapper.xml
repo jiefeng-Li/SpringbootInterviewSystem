@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.ChatMessageMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.ChatMessage">
+            <id property="id" column="id" />
+            <result property="sendId" column="send_id" />
+            <result property="receiveId" column="receive_id" />
+            <result property="content" column="content" />
+            <result property="timestamp" column="timestamp" />
+            <result property="status" column="status" />
+            <result property="isDeleted" column="is_deleted" />
+    </resultMap>
+
+    <resultMap id="VoResultMap" type="com.cuit.interviewsystem.model.vo.ChatMessageVo">
+        <result property="sendId" column="send_id" />
+        <result property="receiveId" column="receive_id" />
+        <result property="content" column="content" />
+        <result property="timestamp" column="timestamp" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,send_id,receive_id,content,timestamp,status,
+        is_deleted
+    </sql>
+</mapper>

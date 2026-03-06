@@ -207,3 +207,18 @@ CREATE TABLE `t_job_application` (
     KEY `idx_apply_time` (`apply_time`),
     KEY `idx_job_user` (`job_position_id`, `user_id`) -- 联合索引，加速查重
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='简历投递记录表';
+
+drop table if exists `t_chat_message`;
+CREATE TABLE `t_chat_message` (
+    `id` bigint NOT NULL AUTO_INCREMENT COMMENT '消息ID',
+    `send_id` bigint NOT NULL COMMENT '发送者ID',
+    `receive_id` bigint NOT NULL COMMENT '接收者ID',
+    `content` text NOT NULL COMMENT '消息内容',
+    `timestamp` bigint NOT NULL COMMENT '发送时间戳',
+    `status` tinyint NOT NULL DEFAULT '0' COMMENT '消息状态(未读0,已读1,撤回2)',
+    `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除',
+    PRIMARY KEY (`id`),
+    KEY `idx_send_id` (`send_id`),
+    KEY `idx_receive_id` (`receive_id`),
+    KEY `idx_timestamp` (`timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天记录表';
