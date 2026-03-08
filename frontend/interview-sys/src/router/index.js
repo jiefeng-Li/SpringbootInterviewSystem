@@ -1,22 +1,38 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
+import Login from '@/views/login/index.vue'
+import NotFound from '@/views/NotFound/index.vue';
+import RegisterPage from '@/views/register/index.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    { path: '/home', redirect: '/' },
     {
       path: '/',
-      name: 'home',
-      component: HomeView,
+      name: 'Home',
+      component: () => import('@/views/home/index.vue'),
+      children: [
+          { path: '/job', name: 'Job', component: () => import('@/views/home/components/JobPage.vue') },
+          { path: '/resume', name: 'Resume', component: () => import('@/views/home/components/ResumePage.vue') },
+          { path: '/my-invote', name: 'MyInvote', component: () => import('@/views/home/components/MyInvotePage.vue') },
+          { path: '/company', name: 'Company', component: () => import('@/views/home/components/CompanyPage.vue') },
+      ]
     },
     {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
+      path: '/register',
+      name: 'Register',
+      component: RegisterPage
     },
+    {
+      path: '/login',
+      name: 'Login',
+      component: Login
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'NotFound',
+      component: NotFound
+    }
   ],
 })
 

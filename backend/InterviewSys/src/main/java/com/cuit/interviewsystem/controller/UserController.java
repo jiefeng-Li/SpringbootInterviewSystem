@@ -22,6 +22,8 @@ import com.cuit.interviewsystem.service.CompanyService;
 import com.cuit.interviewsystem.service.UserBindingRequestService;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.utils.JWTUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -36,8 +38,7 @@ import java.util.Objects;
 @Slf4j
 @RestController
 @RequestMapping("/user")
-//@Tag(name = "用户管理")
-//TODO springboot4.0引入knife4j 似乎有版本冲突
+@Tag(name = "用户管理")
 public class UserController {
     @Resource
     private UserService userService;
@@ -48,16 +49,15 @@ public class UserController {
     @Resource
     private JWTUtil jwtUtil;
 
-
-//    @Operation(summary = "用户注册")
-
     /**
      * 管理员用户注册
      * @param userRegisterDto
      * @return
      */
+    @Operation(summary = "管理员用户注册")
     @PostMapping("/admin/register")
-    public Result sysAdminRegister(UserRegisterDto userRegisterDto) {
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
+    public Result sysAdminRegister(@Valid UserRegisterDto userRegisterDto) {
         long userId = userService.sysAdminRegister(userRegisterDto);
         if (userId <= 0)
             return Result.error(ErrorEnum.SYSTEM_ERROR, "用户注册失败");
@@ -70,7 +70,8 @@ public class UserController {
      * @param userRegisterDto
      * @return
      */
-        @PostMapping("/comp/register")
+    @Operation(summary = "公司用户注册")
+    @PostMapping("/comp/register")
     public Result<Long> compUserRegister(UserRegisterDto userRegisterDto) {
         long userId = userService.compUserRegister(userRegisterDto);
         return Result.success(userId);
@@ -81,6 +82,7 @@ public class UserController {
      * @param  cur
      * @return
      */
+    @Operation(summary = "普通用户注册")
     @PostMapping("/register")
     public Result<Long> commonUserRegister(CommonUserRegister cur) {
         long userId = userService.commonUserRegister(cur);
@@ -88,13 +90,13 @@ public class UserController {
     }
 
 
-//    @Operation(summary = "用户登录")
 
     /**
      * 通用用户登录
      * @param userLoginDto
      * @return
      */
+    @Operation(summary = "用户登录")
     @GetMapping("/login")
     @AuthCheck
     public Result<String> login(UserLoginDto userLoginDto) {
@@ -115,12 +117,12 @@ public class UserController {
         return Result.success(jwt);
     }
 
-
+    @Operation(summary = "获取当前的登录用户")
     @GetMapping("/current")
     public Result<UserVo> getCurrentUser() {
         User user = userService.getCurrentUser();
-
-        return null;
+        UserVo res = UserVo.objToVo(user);
+        return Result.success(res);
     }
 
 
@@ -128,6 +130,7 @@ public class UserController {
      *
      * @return 用户角色类型
      */
+    @Operation(summary = "获取用户角色类型")
     @GetMapping("/roles")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result getUserRoles() {
@@ -138,6 +141,7 @@ public class UserController {
         return Result.success(res);
     }
 
+    @Operation(summary = "获取用户状态类型")
     @GetMapping("/status")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
     public Result getUserStatus() {
@@ -148,13 +152,14 @@ public class UserController {
         return Result.success(res);
     }
 
-//    @Operation(summary = "根据组合条件获取一个用户")
+
 
     /**
      * 通用 获取单个用户
      * @param conditions
      * @return
      */
+    @Operation(summary = "根据组合条件获取一个用户")
     @GetMapping
     public Result<UserVo> getOneUser(User conditions) {
         User res = userService.getOneUser(conditions);
@@ -165,8 +170,9 @@ public class UserController {
         return Result.success(resVo);
     }
 
+    @Operation(summary = "根据id获取一个用户")
     @GetMapping("/list")
-//    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
     public Result<PageVo<UserVo>> getUserPage(UserPageDto conditions) {
         Page<User> users = userService.getUsers(conditions);
         List<User> records = users.getRecords();
@@ -185,13 +191,13 @@ public class UserController {
         return Result.success(pageVo);
     }
 
-//    @Operation(summary = "批量添加用户 # 待重构")
 
     /**
      * 批量添加用户
      * @param usersAddDto
      * @return
      */
+    @Operation(summary = "批量添加用户 # 待重构")
     @PostMapping("/list")
     public Result addUsers(UsersAddDto usersAddDto) {
         //TODO 不太符合实际应用场景，待修改为使用excel添加
@@ -199,13 +205,14 @@ public class UserController {
         return Result.success(null, "添加成功");
     }
 
-//    @Operation(summary = "添加一个用户")
+
 
     /**
      * 管理员添加单个用户
      * @param user
      * @return
      */
+    @Operation(summary = "添加一个用户")
     @PostMapping("")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result<Long> addOneUser(User user) {
@@ -215,13 +222,14 @@ public class UserController {
         return Result.success(null, "添加成功");
     }
 
-//    @Operation(summary = "根据id(userId)删除一个用户")
+
 
     /**
      * (系统、公司)管理员删除单个用户
      * @param id
      * @return
      */
+    @Operation(summary = "根据id(userId)删除一个用户")
     @DeleteMapping("/admin/{id}")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN,
             UserRoleEnum.RECRUITER, UserRoleEnum.JOB_SEEKER})
@@ -238,7 +246,7 @@ public class UserController {
      * @return
      */
 
-//    @Operation(summary = "根据id(userId)更新一个用户")
+    @Operation(summary = "根据id(userId)更新一个用户")
     @PutMapping({"/{id}"})
     @AuthCheck()
     public Result updateOneUser(@PathVariable Long id, @RequestBody User user) {
@@ -249,6 +257,7 @@ public class UserController {
     }
 
     //region  招聘者绑定公司
+    @Operation(summary = "获取绑定状态类型")
     @GetMapping("/binding/status")
     public Result<?> getBindingStatus() {
         record bindingStatusRecord(Integer status, String text) {}
@@ -259,6 +268,7 @@ public class UserController {
         return Result.success(res);
     }
 
+    @Operation(summary = "获取绑定信息")
     @GetMapping("/binding")
     @AuthCheck(roles = {UserRoleEnum.RECRUITER})
     public Result<BindingRequestVo> getBindingInfo(Long id) {
@@ -275,6 +285,7 @@ public class UserController {
         return Result.success(res);
     }
 
+    @Operation(summary = "招聘者绑定公司")
     @PostMapping("/binding")
     @AuthCheck(roles = {UserRoleEnum.RECRUITER})
     public Result<?> addBindingCompany(BindingRequestDto bindingRequestDto) {
@@ -282,6 +293,7 @@ public class UserController {
         return Result.success(token, "提交成功");
     }
 
+    @Operation(summary = "公司管理员审核绑定请求")
     @PutMapping("/binding/{id}")
     @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
     public Result<?> reviewBindingRequest(@PathVariable Long id, @Valid ReviewBindingRequestDto dto) {
@@ -289,6 +301,7 @@ public class UserController {
         return i == 0 ? Result.error(ErrorEnum.SYSTEM_ERROR, "审核失败") : Result.success(null, "审核成功");
     }
 
+    @Operation(summary = "招聘者取消绑定请求")
     @DeleteMapping("/binding/cancel/{id}")
     @AuthCheck(roles = {UserRoleEnum.RECRUITER})
     public Result<?> cancelBindingCompany(@PathVariable Long id) {
@@ -296,6 +309,7 @@ public class UserController {
         return i == 0 ? Result.error(ErrorEnum.SYSTEM_ERROR, "取消失败") : Result.success(null, "取消成功");
     }
 
+    @Operation(summary = "公司管理员解绑公司")
     @PutMapping("/unbind/{id}")
     @AuthCheck(roles = {UserRoleEnum.RECRUITER, UserRoleEnum.COMP_ADMIN})
     public Result<?> unbindCompany(@PathVariable Long id) {
@@ -303,8 +317,9 @@ public class UserController {
         return newToken == null ? Result.error(ErrorEnum.SYSTEM_ERROR, "解绑失败") : Result.success(newToken, "解绑成功");
     }
 
+    @Operation(summary = "公司管理员获取绑定请求列表")
     @GetMapping("/binding/list")
-//    @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
+    @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
     public Result<PageVo<?>> getBindingList(@Valid BindingRequestPageDto pageDto) {
         Page<BindingRequestVo> page = bindingService.getBindingList(pageDto);
         PageVo<BindingRequestVo> res = PageVo.of(page);

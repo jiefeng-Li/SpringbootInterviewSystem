@@ -14,6 +14,7 @@ import com.cuit.interviewsystem.service.CompanyService;
 import com.cuit.interviewsystem.service.JobApplicationService;
 import com.cuit.interviewsystem.service.JobPositionService;
 import com.cuit.interviewsystem.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @Slf4j
 @RequestMapping("/jobApplication")
+@Tag(name = "职位申请相关接口")
 public class JobApplicationController {
     @Resource
     private JobApplicationService jobApplicationService;

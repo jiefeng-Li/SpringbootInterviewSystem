@@ -13,6 +13,7 @@ import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.CompanyVo;
 import com.cuit.interviewsystem.service.CompanyService;
 import com.cuit.interviewsystem.utils.JWTUtil;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ import java.util.List;
 @RestController
 @Slf4j
 @RequestMapping("/company")
+@Tag(name = "公司接口", description = "公司接口")
 public class CompanyController {
     @Resource
     private CompanyService companyService;

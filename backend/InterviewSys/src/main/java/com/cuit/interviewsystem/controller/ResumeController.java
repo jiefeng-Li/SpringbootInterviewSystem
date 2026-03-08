@@ -9,6 +9,7 @@ import com.cuit.interviewsystem.model.dto.resume.ResumePageDto;
 import com.cuit.interviewsystem.model.vo.PageVo;
 import com.cuit.interviewsystem.model.vo.ResumeVo;
 import com.cuit.interviewsystem.service.ResumeService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @Slf4j
 @RequestMapping("/resume")
+@Tag(name = "简历管理")
 public class ResumeController {
     @Resource
     private ResumeService resumeService;

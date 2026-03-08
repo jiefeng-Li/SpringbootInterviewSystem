@@ -14,6 +14,7 @@ import com.cuit.interviewsystem.model.vo.PageVo;
 import com.cuit.interviewsystem.service.CompanyService;
 import com.cuit.interviewsystem.service.JobPositionService;
 import com.cuit.interviewsystem.service.UserService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("/job")
+@Tag(name = "职位管理")
 public class JobPositionController {
     @Resource
     private JobPositionService jobPositionService;

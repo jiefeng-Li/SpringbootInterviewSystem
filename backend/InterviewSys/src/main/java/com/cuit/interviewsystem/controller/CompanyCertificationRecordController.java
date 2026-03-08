@@ -13,6 +13,8 @@ import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.CompanyCertificationRecordVo;
 import com.cuit.interviewsystem.model.vo.PageVo;
 import com.cuit.interviewsystem.service.CompanyCertificationRecordService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,6 +23,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("certification")
+@Tag(name = "企业认证相关接口")
 public class CompanyCertificationRecordController {
     @Resource
     private CompanyCertificationRecordService recordService;
@@ -30,6 +33,7 @@ public class CompanyCertificationRecordController {
      * @return
      */
     @GetMapping("/status")
+    @Operation(summary = "获取企业认证状态")
     public Result<List<?>> getCompanyCertificationStatus() {
         record certificationRecord(Integer status, String text){}
         List<certificationRecord> res = new ArrayList<>();
@@ -43,6 +47,7 @@ public class CompanyCertificationRecordController {
      * @param ccrad
      * @return
      */
+    @Operation(summary = "提交企业认证")
     @PostMapping
     @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
     public Result<Long> companyCertification(CompanyCertificationRecordAddDto ccrad) {
@@ -57,6 +62,7 @@ public class CompanyCertificationRecordController {
      * @param id
      * @return
      */
+    @Operation(summary = "管理员审核企业认证")
     @PutMapping("/{id}")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result<String> reviewCompanyCertification(@PathVariable Long id, @RequestBody AdminReviewCertificationDto dto) {
