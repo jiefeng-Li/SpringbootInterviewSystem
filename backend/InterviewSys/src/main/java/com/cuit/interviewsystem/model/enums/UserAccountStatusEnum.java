@@ -8,12 +8,13 @@ import lombok.Getter;
 @Getter
 public enum UserAccountStatusEnum {
     /**
-     * 账户状态(0禁用,1正常,2锁定)
+     * 账户状态(0禁用,1正常,2锁定,3注销)
      */
 
     BANED(0, "禁用"),
     NORMAL(1, "正常"),
     LOCKED(2, "锁定");
+
     private final Integer status;
     private final String text;
 

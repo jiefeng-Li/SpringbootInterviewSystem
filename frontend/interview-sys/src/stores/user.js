@@ -5,13 +5,17 @@ export const useUserStore = defineStore('user', {
     token: '',
     userId: '',
     companyId: '',
-    role: ''
+    role: '',
+    isloginned: false,
   }),
-  isloginned: false,
+
   getters: {
-    isAuthenticated: (state) => !!state.token
+    isAuthenticated: (state) => !!state.token,
   },
   actions: {
+    setLoginStatus(status) {
+      this.isloginned = status
+    },
     setToken(token) {
       this.token = token
     },
@@ -25,6 +29,7 @@ export const useUserStore = defineStore('user', {
       this.userId = ''
       this.companyId = ''
       this.role = ''
+      this.isloginned = false
     }
   }
 })

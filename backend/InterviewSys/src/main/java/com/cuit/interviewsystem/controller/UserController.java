@@ -102,16 +102,7 @@ public class UserController {
     public Result<String> login(UserLoginDto userLoginDto) {
         User user = userService.login(userLoginDto);
         if (ObjUtil.isEmpty(user)) {
-            return Result.error(ErrorEnum.PARAMS_ERROR, "用户名或密码错误");
-        }
-        if (user.getIsDeleted() == 1) {
-            return Result.error(ErrorEnum.PARAMS_ERROR, "该用户已被删除");
-        }
-        if (Objects.equals(user.getAccountStatus(), UserAccountStatusEnum.BANED.getStatus())) {
-            return Result.error(ErrorEnum.PARAMS_ERROR, "该用户已被封禁");
-        }
-        if (Objects.equals(user.getAccountStatus(), UserAccountStatusEnum.LOCKED.getStatus())) {
-            return Result.error(ErrorEnum.PARAMS_ERROR, "该用户已被锁定");
+            return Result.error(ErrorEnum.PARAMS_ERROR, "账号或密码错误");
         }
         String jwt = jwtUtil.sign(user);
         return Result.success(jwt);
@@ -163,8 +154,8 @@ public class UserController {
     @GetMapping
     public Result<UserVo> getOneUser(User conditions) {
         User res = userService.getOneUser(conditions);
-        UserVo resVo = UserVo.objToVo(res);;
-        if (resVo != null) {
+        UserVo resVo = UserVo.objToVo(res);
+        if (resVo != null && resVo.getCompanyId() != null) {
             resVo.setCompanyName(companyService.getCompanyById(res.getCompanyId()).getCompanyName());
         }
         return Result.success(resVo);
@@ -222,15 +213,13 @@ public class UserController {
         return Result.success(null, "添加成功");
     }
 
-
-
     /**
-     * (系统、公司)管理员删除单个用户
+     * 通用用户注销账号
      * @param id
      * @return
      */
     @Operation(summary = "根据id(userId)删除一个用户")
-    @DeleteMapping("/admin/{id}")
+    @DeleteMapping("/{id}")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN,
             UserRoleEnum.RECRUITER, UserRoleEnum.JOB_SEEKER})
     public Result deleteOneUser(@PathVariable Long id) {
@@ -240,11 +229,7 @@ public class UserController {
         return Result.success(i, "删除成功");
     }
 
-    /**
-     * 通用用户注销账号
-     * @param id
-     * @return
-     */
+
 
     @Operation(summary = "根据id(userId)更新一个用户")
     @PutMapping({"/{id}"})

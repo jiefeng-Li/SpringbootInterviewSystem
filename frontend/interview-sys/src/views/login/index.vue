@@ -1,37 +1,40 @@
 <template>
   <div class="login-container">
-    <el-card class="login-card w-96">
-      <el-container style="width: 100%; height: 100%">
-        <el-aside style="width: 40%; background-color: #f0f0f0"></el-aside>
+    <el-card class="login-card">
+      <el-container style="height: 100%; width: 100%">
+        <el-aside
+          width="200px"
+          style="background-color: rgb(51, 126, 204)"
+        ></el-aside>
         <el-container>
-          <el-header><h2 class="text-center">登录</h2></el-header>
+          <el-header
+            style="
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              font-size: 24px;
+            "
+            ><h2>登录</h2></el-header
+          >
           <el-main>
             <el-form
               ref="formRef"
-              :model="form"
+              class="register-form"
+              :model="user"
               :rules="rules"
-              label-position="top"
-              style="width: 100%"
+              label-width="auto"
             >
-              <el-form-item label="账号" prop="account">
-                <el-input v-model="form.account" placeholder="请输入账号" />
+              <el-form-item label="用户名" prop="account">
+                <el-input v-model="user.account" />
               </el-form-item>
+              <!-- <el-form-item label="手机号" prop="phone">
+                <el-input v-model="user.phone" />
+              </el-form-item> -->
               <el-form-item label="密码" prop="password">
-                <el-input
-                  v-model="form.password"
-                  type="password"
-                  placeholder="请输入密码"
-                />
+                <el-input v-model="user.password" type="password" />
               </el-form-item>
               <el-form-item>
-                <el-button
-                  type="primary"
-                  class="w-full"
-                  @click="onSubmit"
-                  :loading="loading"
-                >
-                  登录
-                </el-button>
+                <el-button type="primary" @click="onSubmit()"> 提交 </el-button>
               </el-form-item>
             </el-form>
           </el-main>
@@ -54,7 +57,7 @@ const userStore = useUserStore();
 const formRef = ref();
 const loading = ref(false);
 
-const form = reactive({
+const user = reactive({
   account: "",
   password: "",
 });
@@ -69,17 +72,22 @@ const onSubmit = async () => {
     await formRef.value.validate();
     loading.value = true;
 
-    const res = await request.post("/user/login", {
-      account: form.account,
-      password: form.password,
+    const res = await request.get("/user/login", {
+      params: { account: user.account, password: user.password },
     });
+    console.log(res);
 
     if (res.data.code === 200) {
       // 响应数据包含 token
-      const { token } = res.data.data;
+      const token = res.data.data;
       userStore.setToken(token);
+      userStore.isloginned = true;
 
-      ElMessage.success("登录成功");
+      ElMessage({
+        message: "登录成功",
+        type: "success",
+        duration: 1000,
+      });
       router.push("/"); // 跳转到首页
     } else {
       ElMessage.error(res.data.message || "登录失败");
@@ -95,22 +103,28 @@ const onSubmit = async () => {
 
 <style scoped>
 .login-container {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: #f7f7f7;
   height: 100vh;
+  background-color: #f5f5f5;
 }
 
 .login-card {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  width: 60vh;
-  height: 50vw;
-  min-height: max-content;
-  min-width: max-content;
-  max-width: 600px;
-  max-height: 500px;
+  position: absolute;
+  width: 600px;
+  height: 400px;
+  padding: 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+}
+
+.login-card :deep(.el-card__body) {
+  padding: 0;
+}
+.login-container :deep(.el-form-item) {
+  padding: 1em;
 }
 </style>

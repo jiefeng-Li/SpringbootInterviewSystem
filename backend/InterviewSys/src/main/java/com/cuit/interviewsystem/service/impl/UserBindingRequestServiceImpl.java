@@ -84,11 +84,12 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
      * 解绑公司
      */
     @Override
-    public String unbindCompany(Long id) {
-        ThrowUtil.throwIfTrue(id == null || id <= 0, ErrorEnum.PARAMS_ERROR);
+    public String unbindCompany(Long userId) {
+        ThrowUtil.throwIfTrue(userId == null || userId <= 0, ErrorEnum.PARAMS_ERROR);
         UserRoleEnum role = UserRoleEnum.getRole(jwtUtil.getLoginUserInfo(JWTUtil.ELEMENT.ROLE));
-        User targetUser = userMapper.selectById(id);
+        User targetUser = userMapper.selectById(userId);
         User curUser = jwtUtil.parseLoginUser();
+        ThrowUtil.throwIfTrue(targetUser.getCompanyId() == null, ErrorEnum.NOT_FOUND_ERROR, "公司未绑定");
         //若当前操作用户为公司管理员
         if (UserRoleEnum.COMP_ADMIN.equals(role)) {
             //当前登录的公司管理员所属的企业id
@@ -100,11 +101,11 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
                     ErrorEnum.UNAUTHORIZED);
         } else {
             //若当前操作用户为招聘者，则只能解绑自己
-            ThrowUtil.throwIfTrue(!id.equals(curUser.getUserId()), ErrorEnum.PARAMS_ERROR, "无权限解绑");
+            ThrowUtil.throwIfTrue(!userId.equals(curUser.getUserId()), ErrorEnum.PARAMS_ERROR, "无权限解绑");
         }
         int i = userMapper.update(new LambdaUpdateWrapper<User>()
                 .set(User::getCompanyId, null)
-                .eq(User::getUserId, id));
+                .eq(User::getUserId, userId));
         curUser.setCompanyId(null);
         return i == 0 ? null : jwtUtil.sign(curUser);
     }

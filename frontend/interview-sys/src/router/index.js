@@ -6,9 +6,9 @@ import RegisterPage from '@/views/register/index.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/home', redirect: '/' },
     {
       path: '/',
+      redirect: '/home',
       name: 'Home',
       component: () => import('@/views/home/index.vue'),
       children: [
@@ -16,7 +16,13 @@ const router = createRouter({
           { path: '/resume', name: 'Resume', component: () => import('@/views/home/components/ResumePage.vue') },
           { path: '/my-invote', name: 'MyInvote', component: () => import('@/views/home/components/MyInvotePage.vue') },
           { path: '/company', name: 'Company', component: () => import('@/views/home/components/CompanyPage.vue') },
+          { path: '/home', name: 'HomePage', component: () => import('@/views/home/components/HomePage.vue') },
       ]
+    },
+    {
+        path: '/comp',
+        name: 'Company',
+        component: () => import('@/views/comp/index.vue')
     },
     {
       path: '/register',
@@ -27,6 +33,19 @@ const router = createRouter({
       path: '/login',
       name: 'Login',
       component: Login
+    },
+    {
+      path: '/api-test',
+      name: 'ApiTest',
+      component: () => import('@/api/ApiTest.vue')
+    },
+    {
+      path: '/personal',
+      name: 'Personal',
+      component: () => import('@/views/personal/index.vue'),
+      children: [
+          { path: '/personal/info', name: 'PersonalInfoPage', component: () => import('@/views/personal/components/PersonalInfo.vue') },
+      ]
     },
     {
       path: '/:pathMatch(.*)*',

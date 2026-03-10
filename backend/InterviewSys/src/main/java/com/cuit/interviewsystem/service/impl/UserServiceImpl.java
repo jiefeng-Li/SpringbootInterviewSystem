@@ -6,16 +6,20 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.DigestAlgorithm;
 import cn.hutool.crypto.digest.Digester;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
+import com.cuit.interviewsystem.mapper.CompanyMapper;
 import com.cuit.interviewsystem.model.dto.company.CommonUserRegister;
 import com.cuit.interviewsystem.model.dto.user.UserLoginDto;
 import com.cuit.interviewsystem.model.dto.user.UserPageDto;
 import com.cuit.interviewsystem.model.dto.user.UserRegisterDto;
 import com.cuit.interviewsystem.model.dto.user.UsersAddDto;
+import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.User;
+import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.service.UserService;
@@ -44,6 +48,8 @@ import java.util.concurrent.CompletableFuture;
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private CompanyMapper companyMapper;
     @Resource
     private JWTUtil jwtUtil;
 
@@ -130,6 +136,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public User getCurrentUser() {
         Long userId = jwtUtil.parseLoginUser().getUserId();
         return userMapper.selectById(userId);
+    }
+
+    @Override
+    public int deleteOneUserById(Long delUserId) {
+        ThrowUtil.throwIfTrue(delUserId  == null || delUserId <= 0,
+                ErrorEnum.PARAMS_ERROR);
+        User u = jwtUtil.parseLoginUser();
+        User optUser = userMapper.selectById(u.getUserId());
+        UserRoleEnum optRole = UserRoleEnum.getEnumByValue(optUser.getRole());
+        User delUser = userMapper.selectById(delUserId);
+
+        ThrowUtil.throwIfTrue(ObjUtil.isEmpty(delUser),
+                ErrorEnum.PARAMS_ERROR, "用户不存在");
+        ThrowUtil.throwIfTrue(delUser.getIsDeleted() == 1,
+                ErrorEnum.PARAMS_ERROR, "用户已注销");
+        ThrowUtil.throwIfTrue(delUser.getUserId() != optUser.getUserId() && optUser.getRole() != UserRoleEnum.SYS_ADMIN.getValue(),
+                ErrorEnum.UNAUTHORIZED, "无权删除用户");
+        if (Objects.equals(delUser.getRole(), UserRoleEnum.COMP_ADMIN.getValue()) && delUser.getCompanyId() != null) {
+            //如果该公司不存在其他未被删除,账号状态正常的管理员
+            if (!userMapper.exists(new LambdaUpdateWrapper<User>()
+                    .eq(User::getCompanyId, delUser.getCompanyId())
+                    .ne(User::getUserId, delUser.getUserId())
+                    .eq(User::getIsDeleted, 0)
+                    .ne(User::getAccountStatus, UserAccountStatusEnum.NORMAL.getStatus()))
+                    //并且该公司未注销
+                    && !Objects.equals(companyMapper.selectById(delUser.getCompanyId()).getStatus(), CompanyStatusEnum.DEREGISTER.getStatus())) {
+                throw new BusinessException(ErrorEnum.PARAMS_ERROR, "该公司不存在其他未注销,账号状态正常的管理员, 请先注销公司");
+            }
+        }
+        delUser.setIsDeleted(1);
+        delUser.setUpdateTime(new Date());
+        if (UserRoleEnum.SYS_ADMIN.equals(optRole)) {
+            delUser.setEditTime(new Date());
+        }
+        return userMapper.updateById(delUser);
     }
 
     /**
@@ -240,44 +281,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return userMapper.insert(user) > 0 ? user.getUserId() : 0;
     }
 
-    @Override
-    //TODO 待重构
-    public int deleteOneUserById(Long delUserId) {
-        ThrowUtil.throwIfTrue(delUserId  == null || delUserId <= 0,
-                ErrorEnum.PARAMS_ERROR);
-        User u = jwtUtil.parseLoginUser();
-        ThrowUtil.throwIfTrue(u == null, ErrorEnum.NOT_LOGIN_ERROR);
-        User optUser = userMapper.selectById(u.getUserId());
-        UserRoleEnum optRole = UserRoleEnum.getEnumByValue(optUser.getRole());
-        User delUser = userMapper.selectById(delUserId);
 
-        //非管理员角色，管理员能够自由删除。
-        ThrowUtil.throwIfTrue(ObjUtil.isEmpty(delUser),
-                ErrorEnum.PARAMS_ERROR, "用户不存在");
-        ThrowUtil.throwIfTrue(delUser.getIsDeleted() == 1,
-                ErrorEnum.PARAMS_ERROR, "用户已注销");
-        if (!UserRoleEnum.SYS_ADMIN.equals(optRole)) {
-            // 若为公司管理员角色
-            if (UserRoleEnum.COMP_ADMIN.equals(optRole)) {
-                // 公司管理员不能删除系统管理员，即便系统管理员的公司id与公司管理员的公司id相同
-                // 若被删除的用户与公司管理员的公司id不同则无权限
-                ThrowUtil.throwIfTrue(Objects.equals(UserRoleEnum.getEnumByValue(delUser.getRole()), UserRoleEnum.SYS_ADMIN)
-                                && !Objects.equals(optUser.getCompanyId(), delUser.getCompanyId()),
-                    ErrorEnum.PARAMS_ERROR, "无权限删除该用户");
-            } else {
-            // 其他角色则只能删除（账号注销）自己
-                ThrowUtil.throwIfTrue(!Objects.equals(optUser.getUserId(), delUser.getUserId()),
-                        ErrorEnum.PARAMS_ERROR,
-                        "无权限删除该用户");
-            }
-        }
-        delUser.setIsDeleted(1);
-        delUser.setUpdateTime(new Date());
-        if (UserRoleEnum.SYS_ADMIN.equals(optRole)) {
-            delUser.setEditTime(new Date());
-        }
-        return userMapper.updateById(delUser);
-    }
 
     @Override
     public int updateOneUser(Long id, User user) {

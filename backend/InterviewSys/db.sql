@@ -9,7 +9,7 @@ CREATE TABLE `t_user` (
                           `email` varchar(100) DEFAULT NULL COMMENT '邮箱',
                           `avatar_url` varchar(500) DEFAULT NULL COMMENT '头像URL',
                           `profile` varchar(512) DEFAULT NULL COMMENT '个人简介',
-                          `account_status` tinyint NOT NULL DEFAULT '1' COMMENT '账户状态(0禁用,1正常,2锁定)',
+                          `account_status` tinyint NOT NULL DEFAULT '1' COMMENT '账户状态(0禁用,1正常,2锁定,3注销)',
                           `last_login_time` datetime DEFAULT NULL COMMENT '最后登录时间',
                           `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除(0未删,1已删)',
                           `create_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
