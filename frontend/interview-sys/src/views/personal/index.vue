@@ -1,5 +1,8 @@
 <template>
   <BaseLayout aside-width="400px" aside-background="#ffffff" main-background="#ffffff">
+    <template #header>
+      <HomeHeader />
+    </template>
     <template #aside>
       <PersonalAside />
     </template>
@@ -12,6 +15,7 @@
 <script setup>
 import BaseLayout from "../layout/index.vue";
 import PersonalAside from "./components/PersonalAside.vue";
+import HomeHeader from "../home/components/HomeHeader.vue";
 </script>
 
 <style lang="scss" scoped></style>

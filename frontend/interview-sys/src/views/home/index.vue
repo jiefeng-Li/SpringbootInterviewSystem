@@ -12,6 +12,7 @@
           min-width: 1400px;
           float: left;
           position: fixed;
+          z-index: 100;
         "
       >
         <HomeHeader></HomeHeader>
@@ -58,7 +59,7 @@ onMounted(() => {
 
   .main-container {
     background-color: #fff;
-    min-width: 800px;
+    min-width: 960px;
     max-width: 960px;
     height: 100%;
     padding: 0;

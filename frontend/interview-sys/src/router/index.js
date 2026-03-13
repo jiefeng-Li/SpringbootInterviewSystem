@@ -15,7 +15,7 @@ const router = createRouter({
           { path: '/job', name: 'Job', component: () => import('@/views/home/components/JobPage.vue') },
           { path: '/resume', name: 'Resume', component: () => import('@/views/home/components/ResumePage.vue') },
           { path: '/my-invote', name: 'MyInvote', component: () => import('@/views/home/components/MyInvotePage.vue') },
-          { path: '/company', name: 'Company', component: () => import('@/views/home/components/CompanyPage.vue') },
+          { path: '/company', name: 'HomeCompany', component: () => import('@/views/home/components/CompanyPage.vue') },
           { path: '/home', name: 'HomePage', component: () => import('@/views/home/components/HomePage.vue') },
       ]
     },
@@ -44,7 +44,31 @@ const router = createRouter({
       name: 'Personal',
       component: () => import('@/views/personal/index.vue'),
       children: [
-          { path: '/personal/info', name: 'PersonalInfoPage', component: () => import('@/views/personal/components/PersonalInfo.vue') },
+          { 
+            path: '/personal/info', 
+            name: 'PersonalInfoPage', 
+            component: () => import('@/views/personal/components/PersonalInfo.vue'),
+          },
+          { 
+            path: '/personal/info/edit', 
+            name: 'PersonalInfoEdit', 
+            component: () => import('@/views/personal/components/PersonalInfoEdit.vue') 
+          },
+          {
+            path: '/personal/my',
+            name: 'PersonalMy',
+            component: () => import('@/views/personal/components/PersonalMy.vue')
+          },
+          {
+            path: '/personal/settings',
+            name: 'SystemSetting',
+            component: () => import('@/views/personal/components/SystemSetting.vue')
+          },
+          {
+            path: '/personal/help',
+            name: 'HelpCenter',
+            component: () => import('@/views/personal/components/HelpCenter.vue')
+          }
       ]
     },
     {

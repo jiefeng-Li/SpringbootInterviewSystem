@@ -1,5 +1,5 @@
 <template>
-  <div class="logo-field"></div>
+  <div class="logo-field" @click="router.push('/')"></div>
   <el-tabs v-model="activeName" class="home-tabs" @tab-click="handleClick">
     <el-tab-pane label="首页" name="home"></el-tab-pane>
     <el-tab-pane label="职位" name="job"></el-tab-pane>
@@ -14,7 +14,9 @@
       <el-avatar :icon="UserFilled" />
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item>Action 1 aaaaaaaaaaaa</el-dropdown-item>
+          <el-dropdown-item @click="router.push('/personal/my')"
+            >个人中心</el-dropdown-item
+          >
           <el-dropdown-item>Action 2</el-dropdown-item>
           <el-dropdown-item>Action 3</el-dropdown-item>
           <el-dropdown-item>Action 4</el-dropdown-item>
@@ -30,17 +32,37 @@
 </template>
 
 <script setup>
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 import { UserFilled, CloseBold } from "@element-plus/icons-vue";
 import { useUserStore } from "@/stores/user";
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { ElMessage } from "element-plus";
 
 const router = useRouter();
+const route = useRoute();
+
 const activeName = ref("home");
 
+const getActiveNameFromRoute = (route) => {
+  const path = route.path;
+  if (path.startsWith("/job")) return "job";
+  if (path.startsWith("/company")) return "company";
+  if (path.startsWith("/resume")) return "resume";
+  if (path.startsWith("/my-invote")) return "my-invote";
+  return "home";
+};
+
+watch(
+  () => route.path,
+  () => {
+    activeName.value = getActiveNameFromRoute(route);
+    // 路由变化时滚动到页面顶部
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  },
+  { immediate: true },
+);
+
 const handleClick = (tab) => {
-  console.log(tab);
   // 根据选中的tab名称跳转到对应的路由
   router.push(`/${tab.props.name}`);
 };

@@ -1,5 +1,5 @@
 <template>
-  <div class="info-container">
+  <div class="my-page">
     <el-descriptions title="用户信息" border>
       <el-descriptions-item
         :rowspan="2"
@@ -34,45 +34,58 @@
         >hello everyone! I am a student from Suzhou. I want to learn more about
         web development.</el-descriptions-item
       >
-      <!-- <el-descriptions-item label="备注">
-        <el-tag size="small">School</el-tag>
-      </el-descriptions-item> -->
     </el-descriptions>
-    <div id="info-edit-btn">
-      <el-button
-        type="primary"
-        round
-        :icon="Edit"
-        @click="router.push('/personal/info/edit')"
-        >编辑</el-button
+    <el-container>
+      <el-main>
+        <el-container style="height: 100%">
+          <el-header>
+            <el-menu
+              :default-active="4"
+              mode="horizontal"
+              class="horizontal-menu"
+            >
+              <el-menu-item index="1">沟通过</el-menu-item>
+              <el-menu-item index="2">已投递</el-menu-item>
+              <el-menu-item index="3">面试</el-menu-item>
+              <el-menu-item index="4">感兴趣</el-menu-item>
+            </el-menu>
+          </el-header>
+          <el-main><router-view /></el-main>
+        </el-container>
+      </el-main>
+      <el-aside>
+        <el-card
+          style="height: 400px; width: 80%; margin: 0 auto; margin-top: 20px"
+        >
+          <p v-for="o in 4" :key="o" class="text item">
+            {{ "List item " + o }}
+          </p>
+        </el-card></el-aside
       >
-    </div>
+    </el-container>
   </div>
 </template>
 
-<script setup>
-import router from "@/router";
-import { Edit } from "@element-plus/icons-vue";
-const url =
-  "https://fuss10.elemecdn.com/a/3f/3302e58f9a181d2509f3dc0fa68b0jpeg.jpeg";
-const srcList = [url];
-</script>
+<script setup></script>
 
 <style lang="scss" scoped>
-.info-container {
+.my-page {
   width: 100%;
-  height: 200px;
-  .el-descriptions {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-  }
-  #info-edit-btn {
-    width: 100%;
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  .el-container {
+    flex: 1;
+    .el-aside {
+      border-left: 3px solid #eee;
+    }
+    .horizontal-menu {
+      .el-menu-item {
+        border-radius: 12px;
+        margin: 0 10px;
+        padding: 0 10px;
+      }
+    }
   }
 }
 </style>

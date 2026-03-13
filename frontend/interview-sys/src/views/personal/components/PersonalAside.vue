@@ -2,7 +2,7 @@
   <el-scrollbar style="border-right: 2px solid #f0f0f0">
     <el-menu
       class="mene-style"
-      default-active="/personal/info"
+      default-active="/personal/my"
       router
       @open="handleOpen"
       @close="handleClose"

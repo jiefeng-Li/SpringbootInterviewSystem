@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1>公司页面</h1>
+    <h1>PersonalInfoEdit</h1>
   </div>
 </template>
 
