@@ -8,35 +8,30 @@
     >
       <el-sub-menu index="1">
         <template #title>
-          <el-icon><location /></el-icon>
+          <el-icon><OfficeBuilding /></el-icon>
           <span>企业管理</span>
         </template>
-        <el-menu-item-group title="Group One">
-          <el-menu-item index="1-1">item one</el-menu-item>
-          <el-menu-item index="1-2">item two</el-menu-item>
-        </el-menu-item-group>
-        <el-menu-item-group title="Group Two">
-          <el-menu-item index="1-3">item three</el-menu-item>
-        </el-menu-item-group>
-        <el-sub-menu index="1-4">
-          <template #title>item four</template>
-          <el-menu-item index="1-4-1">item one</el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="1-1">企业信息</el-menu-item>
+        <el-menu-item index="1-2">企业认证</el-menu-item>
+        <el-menu-item index="1-3">用户认证</el-menu-item>
       </el-sub-menu>
       <el-menu-item index="2">
-        <el-icon><icon-menu /></el-icon>
+        <el-icon><TrendCharts /></el-icon>
         <span>数据统计</span>
       </el-menu-item>
-      <el-menu-item index="3" disabled>
-        <el-icon><document /></el-icon>
-        <span>Navigator Three</span>
-      </el-menu-item>
-      <el-menu-item index="4">
+      <el-menu-item index="3">
         <el-icon><setting /></el-icon>
-        <span>Navigator Four</span>
+        <span>设置</span>
       </el-menu-item>
     </el-menu>
   </el-scrollbar>
 </template>
 
-<script setup></script>
+<script setup>
+import {
+  Document,
+  TrendCharts,
+  OfficeBuilding,
+  Setting,
+} from "@element-plus/icons-vue";
+</script>

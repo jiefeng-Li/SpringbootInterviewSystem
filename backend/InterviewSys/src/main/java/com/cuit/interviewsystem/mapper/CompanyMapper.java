@@ -1,7 +1,11 @@
 package com.cuit.interviewsystem.mapper;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.cuit.interviewsystem.model.dto.company.CompanySearchPageDto;
 import com.cuit.interviewsystem.model.entity.Company;
+import com.cuit.interviewsystem.model.vo.CompanyVo;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -12,7 +16,9 @@ import org.apache.ibatis.annotations.Mapper;
 */
 @Mapper
 public interface CompanyMapper extends BaseMapper<Company> {
+    CompanyVo getCompanyVoById(Long id);
 
+    IPage<CompanyVo> getCompanyVoPage(IPage<CompanyVo> page, CompanySearchPageDto dto);
 }
 
 

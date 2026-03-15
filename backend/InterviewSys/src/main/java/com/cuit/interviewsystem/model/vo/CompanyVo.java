@@ -9,6 +9,7 @@ import java.util.Date;
 public class CompanyVo {
     private Long companyId;
     private Long adminId;
+    private String adminName;
 
     /**
      * 公司全称
@@ -50,7 +51,7 @@ public class CompanyVo {
      * String 不同于entity
      * CompanyStatusEnum 的 text
      */
-    private String status;
+    private Integer status;
 
     /**
      * 营业执照URL

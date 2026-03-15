@@ -6,18 +6,18 @@
           <el-avatar :icon="UserFilled" />
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item>
+              <el-dropdown-item @click="router.push('/personal/my')">
                 <el-icon><User /></el-icon>个人信息
               </el-dropdown-item>
-              <el-dropdown-item>
+              <el-dropdown-item @click="router.push('/personal/message')">
                 <el-icon><Bell /></el-icon>消息通知
                 <el-badge class="mark" :value="12" />
               </el-dropdown-item>
-              <el-dropdown-item>
-                <el-icon><QuestionFilled /></el-icon>帮助中心
+              <el-dropdown-item @click="router.push('/personal/settings')">
+                <el-icon><Comment /></el-icon>系统设置
               </el-dropdown-item>
-              <el-dropdown-item>
-                <el-icon><Comment /></el-icon>系统反馈
+              <el-dropdown-item @click="router.push('/personal/help')">
+                <el-icon><QuestionFilled /></el-icon>帮助中心
               </el-dropdown-item>
               <el-divider style="margin: 12px 0" />
               <el-dropdown-item @click="handleLogout"

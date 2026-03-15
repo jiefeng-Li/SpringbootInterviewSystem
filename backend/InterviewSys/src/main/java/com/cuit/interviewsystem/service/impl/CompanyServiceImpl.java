@@ -2,16 +2,19 @@ package com.cuit.interviewsystem.service.impl;
 
 import cn.hutool.core.codec.Base64;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.UserMapper;
 import com.cuit.interviewsystem.model.dto.company.CompanyAddDto;
 import com.cuit.interviewsystem.model.dto.company.CompanyInfoDto;
+import com.cuit.interviewsystem.model.dto.company.CompanySearchPageDto;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
+import com.cuit.interviewsystem.model.vo.CompanyVo;
 import com.cuit.interviewsystem.service.CompanyService;
 import com.cuit.interviewsystem.mapper.CompanyMapper;
 import com.cuit.interviewsystem.utils.AliOSSUtil;
@@ -48,6 +51,12 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
     public Company getCompanyById(Long id) {
         ThrowUtil.throwIfTrue(id <= 0, ErrorEnum.PARAMS_ERROR);
         return companyMapper.selectById(id);
+    }
+
+    @Override
+    public CompanyVo getCompanyVoById(Long id) {
+        ThrowUtil.throwIfTrue(id <= 0, ErrorEnum.PARAMS_ERROR);
+        return companyMapper.getCompanyVoById(id);
     }
 
     /**
@@ -169,6 +178,13 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
         cmp.setUpdateTime(new Date());
 
         return companyMapper.updateById(cmp);
+    }
+
+    @Override
+    public Page<CompanyVo> getCompanyList(CompanySearchPageDto dto) {
+        Page<CompanyVo> page = new Page<>(dto.getPageNum(), dto.getPageSize());
+        companyMapper.getCompanyVoPage(page, dto);
+        return page;
     }
 
     private void objectCheck(Company c) {

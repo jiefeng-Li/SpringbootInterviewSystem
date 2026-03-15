@@ -1,9 +1,12 @@
 package com.cuit.interviewsystem.service;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cuit.interviewsystem.model.dto.company.CompanyAddDto;
 import com.cuit.interviewsystem.model.dto.company.CompanyInfoDto;
+import com.cuit.interviewsystem.model.dto.company.CompanySearchPageDto;
 import com.cuit.interviewsystem.model.entity.Company;
+import com.cuit.interviewsystem.model.vo.CompanyVo;
 
 /**
 * @author jiefe
@@ -11,6 +14,7 @@ import com.cuit.interviewsystem.model.entity.Company;
 * @createDate 2026-01-28 20:13:34
 */
 public interface CompanyService extends IService<Company> {
+    CompanyVo getCompanyVoById(Long id);
     Company getCompanyById(Long id);
 
     int deleteCompanyById(Long id);
@@ -20,4 +24,6 @@ public interface CompanyService extends IService<Company> {
     String addOneCompany(CompanyAddDto cad);
 
     int updateCompanyById(Long id, CompanyInfoDto cid);
+
+    Page<CompanyVo> getCompanyList(CompanySearchPageDto dto);
 }

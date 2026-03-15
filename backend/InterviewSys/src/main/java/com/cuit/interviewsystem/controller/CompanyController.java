@@ -1,27 +1,25 @@
 package com.cuit.interviewsystem.controller;
 
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.model.dto.company.CompanyAddDto;
 import com.cuit.interviewsystem.model.dto.company.CompanyInfoDto;
-import com.cuit.interviewsystem.model.entity.Company;
+import com.cuit.interviewsystem.model.dto.company.CompanySearchPageDto;
 import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.CompanyVo;
+import com.cuit.interviewsystem.model.vo.PageVo;
 import com.cuit.interviewsystem.service.CompanyService;
 import com.cuit.interviewsystem.utils.JWTUtil;
+import com.cuit.interviewsystem.utils.ThrowUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,36 +36,16 @@ public class CompanyController {
 
     @GetMapping("/{id}")
     public Result<CompanyVo> getCompanyById(@PathVariable Long id) {
-        Company c = companyService.getCompanyById(id);
-        CompanyVo res = new CompanyVo();
-        BeanUtils.copyProperties(c, res);
-        CompanyStatusEnum cse = CompanyStatusEnum.getEnum(c.getStatus());
-        if (cse != null)
-            res.setStatus(cse.getText());
-        return Result.success(res);
+        CompanyVo c = companyService.getCompanyVoById(id);
+        return Result.success(c);
     }
 
     @GetMapping("/token")
+    @AuthCheck
     public Result<CompanyVo> getCompanyByToken() {
-        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
-        String token = request.getHeader("token");
-        String parse = jwtUtil.parse(token, JWTUtil.ELEMENT.COMPANY_ID);
-        try {
-            Company company = null;
-            if (parse != null) {
-                long l = Long.parseLong(parse);
-                company = companyService.getCompanyById(l);
-            }
-            CompanyVo res = new CompanyVo();
-            BeanUtils.copyProperties(company, res);
-            CompanyStatusEnum cse = CompanyStatusEnum.getEnum(company.getStatus());
-            if (cse != null)
-                res.setStatus(cse.getText());
-            return Result.success(res);
-        } catch (NumberFormatException e) {
-            throw new BusinessException(ErrorEnum.PARAMS_ERROR);
-        }
+        String cmpId = jwtUtil.getLoginUserInfo(JWTUtil.ELEMENT.COMPANY_ID);
+        ThrowUtil.throwIfTrue(cmpId == null, ErrorEnum.PARAMS_ERROR, "当前用户未绑定公司");
+        return Result.success(companyService.getCompanyVoById(Long.parseLong(cmpId)));
     }
 
     @GetMapping("/status")
@@ -79,6 +57,13 @@ public class CompanyController {
         return Result.success(res);
     }
 
+    @GetMapping("/list")
+    @AuthCheck
+    public Result<PageVo<CompanyVo>> getCompanyList(CompanySearchPageDto dto) {
+        Page<CompanyVo> res = companyService.getCompanyList(dto);
+        return Result.success(PageVo.of(res));
+    }
+
     @DeleteMapping("/{id}")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result<?> deleteCompanyById(@PathVariable Long id) {
@@ -88,7 +73,7 @@ public class CompanyController {
 
     @PutMapping("/deregister/{id}")
     @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
-    public Result<?> deregisterCompanyById(Long id) {
+    public Result<?> deregisterCompanyById(@PathVariable Long id) {
         int i = companyService.deregisterCompanyById(id);
         if (i <= 0)
             return Result.error(ErrorEnum.SYSTEM_ERROR, "注销失败");

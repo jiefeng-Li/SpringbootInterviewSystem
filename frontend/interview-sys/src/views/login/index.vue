@@ -50,6 +50,7 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useUserStore } from "@/stores/user";
 import request from "@/utils/request";
+import { getCurrentUserInfo } from "@/api/user";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -83,12 +84,37 @@ const onSubmit = async () => {
       userStore.setToken(token);
       userStore.isloginned = true;
 
-      ElMessage({
-        message: "登录成功",
-        type: "success",
-        duration: 1000,
-      });
-      router.push("/"); // 跳转到首页
+      // 获取当前用户信息
+      try {
+        const userInfoRes = await getCurrentUserInfo();
+        if (userInfoRes.data.code === 200) {
+          const userData = userInfoRes.data.data;
+          userStore.setUser(userData);
+
+          ElMessage({
+            message: "登录成功",
+            type: "success",
+            duration: 1000,
+          });
+
+          // 根据角色跳转页面
+          if (userData.role === "COMP_ADMIN") {
+            router.push("/comp");
+          } else if (userData.role === "JOB_SEEKER") {
+            router.push("/");
+          } else {
+            // 默认跳转到首页
+            router.push("/");
+          }
+        } else {
+          ElMessage.error("获取用户信息失败");
+          router.push("/");
+        }
+      } catch (error) {
+        console.error("获取用户信息失败", error);
+        ElMessage.error("获取用户信息失败");
+        router.push("/");
+      }
     } else {
       ElMessage.error(res.data.message || "登录失败");
     }

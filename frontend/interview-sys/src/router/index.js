@@ -16,6 +16,7 @@ const router = createRouter({
           { path: '/resume', name: 'Resume', component: () => import('@/views/home/components/ResumePage.vue') },
           { path: '/my-invote', name: 'MyInvote', component: () => import('@/views/home/components/MyInvotePage.vue') },
           { path: '/company', name: 'HomeCompany', component: () => import('@/views/home/components/CompanyPage.vue') },
+          { path: 'company/:id', name: 'CompanyDetail', component: () => import('@/views/company/CompanyDetail.vue') },
           { path: '/home', name: 'HomePage', component: () => import('@/views/home/components/HomePage.vue') },
       ]
     },
@@ -58,6 +59,11 @@ const router = createRouter({
             path: '/personal/my',
             name: 'PersonalMy',
             component: () => import('@/views/personal/components/PersonalMy.vue')
+          },
+          {
+            path: '/personal/message',
+            name: 'PersonalMessage',
+            component: () => import('@/views/personal/components/PersonalMessage.vue')
           },
           {
             path: '/personal/settings',
