@@ -11,7 +11,7 @@ import lombok.ToString;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDate;
 
 
 @EqualsAndHashCode(callSuper = true)
@@ -23,7 +23,7 @@ public class BindingRequestPageDto extends PageDto implements Serializable {
     @NotNull(message = "公司ID不能为空")
     private Long companyId;
     private Integer status;
-    private Date start;
-    private Date end;
+    private LocalDate start;
+    private LocalDate end;
     private Integer isDeleted = 0;
 }

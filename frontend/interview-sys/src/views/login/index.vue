@@ -14,8 +14,14 @@
               align-items: center;
               font-size: 24px;
             "
-            ><h2>登录</h2></el-header
-          >
+            ><h2>登录</h2>
+            <el-link
+              type="primary"
+              style="margin-left: auto"
+              @click="router.push('/register')"
+              >注册</el-link
+            >
+          </el-header>
           <el-main>
             <el-form
               ref="formRef"
@@ -24,12 +30,12 @@
               :rules="rules"
               label-width="auto"
             >
-              <el-form-item label="用户名" prop="account">
-                <el-input v-model="user.account" />
+              <el-form-item label="账号" prop="account">
+                <el-input
+                  v-model="user.account"
+                  placeholder="用户名/手机号/邮箱"
+                />
               </el-form-item>
-              <!-- <el-form-item label="手机号" prop="phone">
-                <el-input v-model="user.phone" />
-              </el-form-item> -->
               <el-form-item label="密码" prop="password">
                 <el-input v-model="user.password" type="password" />
               </el-form-item>
@@ -50,7 +56,7 @@ import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useUserStore } from "@/stores/user";
 import request from "@/utils/request";
-import { getCurrentUserInfo } from "@/api/user";
+import { getCurrentUserInfo, userLogin } from "@/api/user";
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -73,9 +79,8 @@ const onSubmit = async () => {
     await formRef.value.validate();
     loading.value = true;
 
-    const res = await request.get("/user/login", {
-      params: { account: user.account, password: user.password },
-    });
+    const res = await userLogin(user.account, user.password);
+
     console.log(res);
 
     if (res.data.code === 200) {
@@ -102,18 +107,24 @@ const onSubmit = async () => {
             router.push("/comp");
           } else if (userData.role === "JOB_SEEKER") {
             router.push("/");
+          } else if (userData.role === "RECRUITER") {
+            router.push("/recruiter");
+          } else if (userData.role === "SYS_ADMIN") {
+            router.push("/admin");
           } else {
             // 默认跳转到首页
             router.push("/");
           }
         } else {
-          ElMessage.error("获取用户信息失败");
-          router.push("/");
+          ElMessage.error("获取用户信息失败，请重新登录");
+          userStore.logout();
+          router.push("/login");
         }
       } catch (error) {
         console.error("获取用户信息失败", error);
-        ElMessage.error("获取用户信息失败");
-        router.push("/");
+        ElMessage.error("获取用户信息失败，请重新登录");
+        userStore.logout();
+        router.push("/login");
       }
     } else {
       ElMessage.error(res.data.message || "登录失败");

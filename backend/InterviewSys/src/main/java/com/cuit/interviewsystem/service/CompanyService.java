@@ -2,6 +2,7 @@ package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cuit.interviewsystem.model.dto.company.AdminCompanySearchPageDto;
 import com.cuit.interviewsystem.model.dto.company.CompanyAddDto;
 import com.cuit.interviewsystem.model.dto.company.CompanyInfoDto;
 import com.cuit.interviewsystem.model.dto.company.CompanySearchPageDto;
@@ -25,5 +26,9 @@ public interface CompanyService extends IService<Company> {
 
     int updateCompanyById(Long id, CompanyInfoDto cid);
 
+    int updateCompanyStatusBySysAdmin(Long id, Integer status);
+
     Page<CompanyVo> getCompanyList(CompanySearchPageDto dto);
+
+    Page<CompanyVo> adminGetCompanyList(AdminCompanySearchPageDto dto);
 }

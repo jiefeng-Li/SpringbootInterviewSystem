@@ -7,7 +7,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -17,7 +17,7 @@ public class AddResumeDto implements Serializable {
     /**
      * 用户ID
      */
-    @NotBlank(message = "简历用户ID不能为空")
+    @NotNull(message = "简历用户ID不能为空")
     private Long userId;
 
     /**
@@ -42,16 +42,18 @@ public class AddResumeDto implements Serializable {
     /**
      * 出生日期
      */
-    private Date birthday;
+    private LocalDate birthday;
 
     /**
      * 手机号
      */
+    @NotBlank(message = "手机号不能为空")
     private String phone;
 
     /**
      * 邮箱
      */
+    @NotBlank(message = "邮箱不能为空")
     private String email;
 
     /**
@@ -59,12 +61,6 @@ public class AddResumeDto implements Serializable {
      */
     @Length(max = 64, message = "现居地址过长")
     private String address;
-
-    /**
-     * 头像
-     * TODO: 头像上传
-     */
-    private String avatar;
 
     /**
      * 期望工作城市

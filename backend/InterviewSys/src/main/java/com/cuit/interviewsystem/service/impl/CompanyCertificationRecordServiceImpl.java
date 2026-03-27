@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Objects;
 
@@ -105,11 +106,11 @@ public class CompanyCertificationRecordServiceImpl extends ServiceImpl<CompanyCe
             default:
                 throw new BusinessException(ErrorEnum.PARAMS_ERROR.getCode(), "认证状态异常");
         }
-        company.setEditTime(new Date());
+        company.setEditTime(LocalDate.now());
         long reviewBy = Long.parseLong(jwtUtil.getLoginUserInfo(JWTUtil.ELEMENT.USER_ID));
         record.setReviewedBy(reviewBy);
-        record.setReviewedTime(new Date());
-        record.setUpdateTime(new Date());
+        record.setReviewedTime(LocalDate.now());
+        record.setUpdateTime(LocalDate.now());
         record.setReviewNotes(dto.getReviewNotes());
         record.setStatus(dto.getStatus());
         //更新数据--事务

@@ -2,11 +2,11 @@ package com.cuit.interviewsystem.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
-import java.util.Date;
-
 import com.cuit.interviewsystem.model.enums.JobPositionStatusEnum;
 import com.cuit.interviewsystem.model.enums.JobTypeEnum;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 /**
  * 职位发布表
@@ -94,7 +94,7 @@ public class JobPosition {
     /**
      * 发布时间
      */
-    private Date publishTime;
+    private LocalDate publishTime;
 
     /**
      * 浏览量
@@ -111,6 +111,6 @@ public class JobPosition {
      */
     @TableLogic
     private Integer isDeleted;
-    private Date createTime;
-    private Date updateTime;
+    private LocalDate createTime;
+    private LocalDate updateTime;
 }

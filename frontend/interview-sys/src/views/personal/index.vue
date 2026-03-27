@@ -1,7 +1,11 @@
 <template>
-  <BaseLayout aside-width="400px" aside-background="#ffffff" main-background="#ffffff">
+  <BaseLayout
+    aside-width="400px"
+    aside-background="#ffffff"
+    main-background="#ffffff"
+  >
     <template #header>
-      <HomeHeader />
+      <HomeHeader/>
     </template>
     <template #aside>
       <PersonalAside />
@@ -16,6 +20,14 @@
 import BaseLayout from "../layout/index.vue";
 import PersonalAside from "./components/PersonalAside.vue";
 import HomeHeader from "../home/components/HomeHeader.vue";
+import { useUserStore } from "@/stores/user";
+import { onMounted, ref } from "vue";
+
+const userStore = useUserStore();
+const role = ref("");
+onMounted(() => {
+  role.value = userStore.role;
+});
 </script>
 
 <style lang="scss" scoped></style>

@@ -17,8 +17,14 @@
               align-items: center;
               font-size: 24px;
             "
-            ><h2>登录/注册</h2></el-header
-          >
+            ><h2>注册</h2>
+            <el-link
+              type="primary"
+              style="margin-left: auto"
+              @click="router.push('/login')"
+              >登录</el-link
+            >
+          </el-header>
           <el-main>
             <el-tabs
               style="
@@ -40,7 +46,7 @@
               label-width="auto"
             >
               <el-form-item label="用户名" prop="username">
-                <el-input v-model="user.name" />
+                <el-input v-model="user.username" />
               </el-form-item>
               <el-form-item label="手机号" prop="phone">
                 <el-input v-model="user.phone" />
@@ -56,7 +62,7 @@
                   type="primary"
                   style="margin-left: auto"
                   @click="switchMode()"
-                  >企业注册/登录</el-link
+                  >企业注册</el-link
                 >
               </el-form-item>
             </el-form>
@@ -85,8 +91,14 @@
               align-items: center;
               font-size: 24px;
             "
-            ><h2>登录/注册</h2></el-header
-          >
+            ><h2>注册</h2>
+            <el-link
+              type="primary"
+              style="margin-left: auto"
+              @click="router.push('/login')"
+              >登录</el-link
+            >
+          </el-header>
           <el-main>
             <el-tabs
               style="
@@ -115,7 +127,7 @@
               label-width="auto"
             >
               <el-form-item label="用户名" prop="username">
-                <el-input v-model="user.name" />
+                <el-input v-model="user.username" />
               </el-form-item>
               <el-form-item label="手机号" prop="phone">
                 <el-input v-model="user.phone" />
@@ -127,11 +139,12 @@
                 <el-button type="primary" @click="register(user)">
                   提交
                 </el-button>
+
                 <el-link
                   type="primary"
                   style="margin-left: auto"
                   @click="switchMode()"
-                  >企业注册/登录</el-link
+                  >求职/招聘</el-link
                 >
               </el-form-item>
             </el-form>
@@ -145,8 +158,8 @@
 <script setup>
 import { ref, reactive } from "vue";
 import { useRouter } from "vue-router";
-import request from "@/utils/request";
 import { ElMessage } from "element-plus";
+import { compAdminRegister, commonUserRegister } from "@/api/user";
 
 const router = useRouter();
 const loading = ref(false);
@@ -188,43 +201,38 @@ const handleClick = (tab) => {
 };
 
 const register = async (user) => {
-  try {
-    await ruleFormRef.value.validate();
-  } catch (error) {
-    return;
-  }
+  await ruleFormRef.value.validate();
 
   loading.value = true;
   const { username, phone, password, registerType } = user;
   const data = { username, phone, password };
-
-  let url = "";
-  if (registerType === "SYS_ADMIN") {
-    url = "/comp/register";
-  } else if (registerType === "COMP_ADMIN") {
-    url = "/admin/register";
+  const res = null;
+  console.log("注册数据:", data, "注册类型:", registerType);
+  if (registerType === "COMP_ADMIN") {
+    res = await compAdminRegister(data);
   } else {
-    url = "/register";
     data.role = registerType;
+    res = await commonUserRegister(data);
   }
-
-  try {
-    const response = await request.post(url, data);
-    if (response.data.code === 200) {
-      ElMessage.success("注册成功，请登录");
-      router.push("/login");
-    }
-  } catch (error) {
-    ElMessage.error("注册失败，请重试");
-  } finally {
-    loading.value = false;
-  }
+  ElMessage.success("注册成功");
+  router.push("/login");
 };
 
 const switchMode = () => {
   // 切换到企业注册/登录模式的逻辑
-  console.log("切换到企业注册/登录模式");
   modeShift.value = !modeShift.value;
+
+  // 根据当前模式设置注册类型
+  if (modeShift.value) {
+    // 切换到企业注册/登录模式
+    user.registerType = "COMP_ADMIN";
+    adminTab.value = "COMP_ADMIN";
+  } else {
+    // 切换回普通用户注册/登录模式
+    user.registerType = commonTab.value;
+  }
+
+  console.log("切换模式，当前注册类型:", user.registerType);
 };
 </script>
 

@@ -3,7 +3,7 @@ package com.cuit.interviewsystem.model.vo;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class JobApplicationVo {
@@ -30,6 +30,7 @@ public class JobApplicationVo {
      */
     @NotNull
     private Long userId;
+    private String jobSeekerName;
 
     /**
      * 投递时使用的简历ID
@@ -40,7 +41,7 @@ public class JobApplicationVo {
     /**
      * 投递时间
      */
-    private Date applyTime;
+    private LocalDate applyTime;
 
     /**
      * 状态(0待处理,1已查看,2初筛通过,3初筛不通过,4面试中,5已发Offer,6已录用,7已淘汰)

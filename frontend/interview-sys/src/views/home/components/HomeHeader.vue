@@ -1,6 +1,11 @@
 <template>
-  <div class="logo-field" @click="router.push('/')"></div>
-  <el-tabs v-model="activeName" class="home-tabs" @tab-click="handleClick">
+  <div class="logo-field" @click="handleClickLogo"></div>
+  <el-tabs
+    v-model="activeName"
+    class="home-tabs"
+    @tab-click="handleClick"
+    v-if="!role || role == 'JOB_SEEKER'"
+  >
     <el-tab-pane label="首页" name="home"></el-tab-pane>
     <el-tab-pane label="职位" name="job"></el-tab-pane>
     <el-tab-pane label="公司" name="company"></el-tab-pane>
@@ -11,7 +16,7 @@
     <el-link href="/login" v-show="!isLogin">登录</el-link>
     <el-link href="/register" v-show="!isLogin">注册</el-link>
     <el-dropdown placement="bottom-end">
-      <el-avatar :icon="UserFilled" />
+      <el-avatar :icon="UserFilled" :src="userStore.avatarUrl" />
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item @click="router.push('/personal/my')">
@@ -47,7 +52,7 @@ import { ElMessage } from "element-plus";
 
 const router = useRouter();
 const route = useRoute();
-
+const role = ref("");
 const activeName = ref("home");
 
 const getActiveNameFromRoute = (route) => {
@@ -68,6 +73,19 @@ watch(
   },
   { immediate: true },
 );
+
+const handleClickLogo = () => {
+  console.log(role.value);
+  if (role.value == "JOB_SEEKER") {
+    router.push("/");
+  } else if (role.value == "COMP_ADMIN") {
+    router.push("/comp");
+  } else if (role.value == "RECRUITER") {
+    router.push("/recruiter");
+  } else if (role.value == "SYS_ADMIN") {
+    router.push("/admin");
+  }
+};
 
 const handleClick = (tab) => {
   // 根据选中的tab名称跳转到对应的路由
@@ -91,6 +109,7 @@ const userStore = useUserStore();
 onMounted(() => {
   // 检查用户是否已登录
   isLogin.value = userStore.isloginned;
+  role.value = userStore.role;
   if (isLogin.value) {
     // 如果已登录，可以在这里获取用户信息或执行其他操作
 

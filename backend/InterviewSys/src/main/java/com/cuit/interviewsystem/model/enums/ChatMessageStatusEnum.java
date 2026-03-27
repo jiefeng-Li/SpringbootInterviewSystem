@@ -1,8 +1,11 @@
 package com.cuit.interviewsystem.model.enums;
 
+import lombok.Getter;
+
 /**
  * 消息状态(未读0,已读1,撤回2)
  */
+@Getter
 public enum ChatMessageStatusEnum {
     UNREAD(0, "未读"),
     READ(1, "已读"),

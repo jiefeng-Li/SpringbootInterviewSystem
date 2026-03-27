@@ -32,26 +32,36 @@ public class ChatTextWebSocketHandler extends TextWebSocketHandler {
         String query = session.getUri().getQuery();
         Long userId;
         try {
-            userId = extractUserId(query);
+            userId = Long.parseLong((String) session.getAttributes().get("userId"));
         } catch (Exception e) {
             session.close(CloseStatus.POLICY_VIOLATION);
-            return;
+            throw new BusinessException(ErrorEnum.NOT_FOUND_ERROR);
         }
-//        List<ChatMessageVo> msg = chatMessageService.getUnreadMessageByReceiverId(userId);
+        List<ChatMessageVo> msg = chatMessageService.getUnreadMessageByReceiverId(userId);
         sessions.put(userId, session);
         //获取请求头
         Map<String, String> headers = session.getHandshakeHeaders().toSingleValueMap();
         String token = headers.get("token");
         log.info("用户 {} 连接建立，token: {}", userId, token);
-//        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(msg)));
+        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(msg)));
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        String payload = message.getPayload();
-        ChatMessageDto chatMessage = objectMapper.readValue(payload, ChatMessageDto.class);
-        log.info("收到消息: {}", chatMessage);
-        forwardMessage(chatMessage);
+        Long sendId = null;
+        try {
+            sendId = Long.parseLong((String) session.getAttributes().get("userId"));
+            String payload = message.getPayload();
+            ChatMessageDto chatMessage = objectMapper.readValue(payload, ChatMessageDto.class);
+            log.info("收到消息: {}", chatMessage);
+            forwardMessage(chatMessage);
+            if (sendId != chatMessage.getSendId()) {
+                throw new BusinessException(ErrorEnum.PARAMS_ERROR, "发送用户与登录用户不一致");
+            }
+        } catch (Exception e) {
+            session.close(CloseStatus.POLICY_VIOLATION);
+            throw new BusinessException(ErrorEnum.NOT_LOGIN_ERROR);
+        }
     }
 
     @Override

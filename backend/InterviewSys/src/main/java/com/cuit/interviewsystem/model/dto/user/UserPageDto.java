@@ -17,7 +17,6 @@ public class UserPageDto extends PageDto implements Serializable {
     private String email;
     private String phone;
     private Integer accountStatus;
-    //必须
-    private Integer isDeleted;
+    private Integer isDeleted = 0;
     private Long companyId;
 }

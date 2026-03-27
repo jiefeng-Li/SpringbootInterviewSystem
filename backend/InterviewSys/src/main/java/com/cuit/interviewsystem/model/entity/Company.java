@@ -2,7 +2,7 @@ package com.cuit.interviewsystem.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
-import java.util.Date;
+import java.time.LocalDate;
 import lombok.Data;
 
 /**
@@ -83,15 +83,15 @@ public class Company {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDate createTime;
 
     /**
      * 更新时间
      */
-    private Date updateTime;
+    private LocalDate updateTime;
 
     /**
      * 系统更新时间
      */
-    private Date editTime;
+    private LocalDate editTime;
 }

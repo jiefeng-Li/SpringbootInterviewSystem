@@ -1,11 +1,9 @@
 package com.cuit.interviewsystem.model.vo;
 
-import com.cuit.interviewsystem.model.entity.ResumeEducation;
 import lombok.Data;
-import org.springframework.beans.BeanUtils;
 
-import java.util.Date;
-import java.util.List;
+import java.time.LocalDate;
+
 
 @Data
 public class ResumeEducationVo {
@@ -29,12 +27,12 @@ public class ResumeEducationVo {
     /**
      * 开始时间
      */
-    private Date startDate;
+    private LocalDate startDate;
 
     /**
      * 毕业时间（或至今）
      */
-    private Date endDate;
+    private LocalDate endDate;
 
     /**
      * 在校经历、荣誉等

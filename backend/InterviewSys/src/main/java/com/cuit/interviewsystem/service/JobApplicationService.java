@@ -1,7 +1,9 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.cuit.interviewsystem.model.dto.UpdateJobApplicationDto;
+import com.cuit.interviewsystem.model.dto.jobApplication.OwnJobApplicationPageDto;
+import com.cuit.interviewsystem.model.dto.jobApplication.UpdateJobApplicationBatchDto;
+import com.cuit.interviewsystem.model.dto.jobApplication.UpdateJobApplicationDto;
 import com.cuit.interviewsystem.model.dto.jobApplication.AddJobApplicationDto;
 import com.cuit.interviewsystem.model.dto.jobApplication.JobApplicationPageDto;
 import com.cuit.interviewsystem.model.entity.JobApplication;
@@ -23,5 +25,9 @@ public interface JobApplicationService extends IService<JobApplication> {
 
     int updateJobApplicationStatus(UpdateJobApplicationDto jobApplication);
 
+    int updateJobApplicationStatusBatch(UpdateJobApplicationBatchDto dto);
+
     JobApplicationVo getJobApplicationById(Long id);
+
+    Page<JobApplicationVo> getOwnApplicationList(OwnJobApplicationPageDto pageDto);
 }

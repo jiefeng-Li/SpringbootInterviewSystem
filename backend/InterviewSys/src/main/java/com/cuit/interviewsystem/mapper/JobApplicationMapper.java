@@ -2,6 +2,7 @@ package com.cuit.interviewsystem.mapper;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cuit.interviewsystem.model.dto.jobApplication.OwnJobApplicationPageDto;
 import com.cuit.interviewsystem.model.dto.jobApplication.JobApplicationPageDto;
 import com.cuit.interviewsystem.model.entity.JobApplication;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
@@ -26,4 +27,6 @@ public interface JobApplicationMapper extends BaseMapper<JobApplication> {
             "left join t_job_position job on job.id = t.resume_id " +
             "where t.id = #{id}")
     JobApplicationVo getJobApplicationById(Long id);
+
+    IPage<JobApplicationVo> getOwnJobApplicationPage(Page<JobApplicationVo> page, OwnJobApplicationPageDto pageDto);
 }

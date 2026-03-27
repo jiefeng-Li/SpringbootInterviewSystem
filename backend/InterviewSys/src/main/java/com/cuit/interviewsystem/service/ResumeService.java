@@ -6,6 +6,7 @@ import com.cuit.interviewsystem.model.dto.resume.AddResumeDto;
 import com.cuit.interviewsystem.model.entity.Resume;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.cuit.interviewsystem.model.vo.ResumeVo;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
 * @author jiefe
@@ -13,7 +14,7 @@ import com.cuit.interviewsystem.model.vo.ResumeVo;
 * @createDate 2026-02-23 21:03:31
 */
 public interface ResumeService extends IService<Resume> {
-    int addResume(AddResumeDto resume);
+    Long addResume(AddResumeDto resume, MultipartFile avatar);
 
     Page<ResumeVo> getResumesByUserId(ResumePageDto resumePageDto);
 
@@ -23,5 +24,5 @@ public interface ResumeService extends IService<Resume> {
 
     ResumeVo getResumeById(Long id);
 
-    void updateResume(AddResumeDto resume, Long id);
+    void updateResume(AddResumeDto resume, Long id, MultipartFile avatar);
 }

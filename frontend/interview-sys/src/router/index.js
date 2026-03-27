@@ -13,7 +13,9 @@ const router = createRouter({
       component: () => import('@/views/home/index.vue'),
       children: [
           { path: '/job', name: 'Job', component: () => import('@/views/home/components/JobPage.vue') },
+          { path: 'job/:id', name: 'JobDetail', component: () => import('@/views/job/JobDetail.vue') },
           { path: '/resume', name: 'Resume', component: () => import('@/views/home/components/ResumePage.vue') },
+          { path: '/resume/create', name: 'ResumeCreate', component: () => import('@/views/home/components/ResumeCreate.vue') },
           { path: '/my-invote', name: 'MyInvote', component: () => import('@/views/home/components/MyInvotePage.vue') },
           { path: '/company', name: 'HomeCompany', component: () => import('@/views/home/components/CompanyPage.vue') },
           { path: 'company/:id', name: 'CompanyDetail', component: () => import('@/views/company/CompanyDetail.vue') },
@@ -21,14 +23,116 @@ const router = createRouter({
       ]
     },
     {
+      path: '/admin',
+      name: 'SysAdmin',
+      component: () => import('@/views/sysadmin/index.vue'),
+      children: [
+        {
+          path: '',
+          redirect: '/admin/certification-manage'
+        },
+        {
+          path: 'certification-manage',
+          name: 'SysAdminCertificationManage',
+          component: () => import('@/views/sysadmin/components/CertificationManage.vue')
+        },
+        {
+          path: 'company-manage',
+          name: 'SysAdminCompanyManage',
+          component: () => import('@/views/sysadmin/components/CompanyManage.vue')
+        },
+        {
+          path: 'user-manage',
+          name: 'SysAdminUserManage',
+          component: () => import('@/views/sysadmin/components/UserManage.vue')
+        }
+      ]
+    },
+    {
+      path: '/recruiter',
+      name: 'Recruiter',
+      component: () => import('@/views/recruiter/index.vue'),
+      children: [
+        {
+          path: 'job-publish',
+          name: 'JobPublish',
+          component: () => import('@/views/recruiter/components/JobPublish.vue')
+        },
+        {
+          path: 'job-list',
+          name: 'JobList',
+          component: () => import('@/views/recruiter/components/JobList.vue')
+        },
+        {
+          path: 'job/:id',
+          name: 'RecruiterJobDetail',
+          component: () => import('@/views/recruiter/components/JobDetail.vue')
+        },
+        {
+          path: 'job/edit/:id',
+          name: 'RecruiterJobEdit',
+          component: () => import('@/views/recruiter/components/JobEdit.vue')
+        },
+        {
+          path: 'application-records',
+          name: 'ApplicationRecords',
+          component: () => import('@/views/recruiter/components/ApplicationRecords.vue')
+        },
+        {
+          path: 'interview-records',
+          name: 'InterviewRecords',
+          component: () => import('@/views/recruiter/components/InterviewRecords.vue')
+        },
+        {
+          path: 'invite-interview',
+          name: 'InviteInterview',
+          component: () => import('@/views/recruiter/components/InviteInterview.vue')
+        },
+        {
+          path: 'send-offer',
+          name: 'SendOffer',
+          component: () => import('@/views/recruiter/components/SendOffer.vue')
+        },
+        {
+          path: 'bind-company',
+          name: 'BindCompany',
+          component: () => import('@/components/BindCompany.vue')
+        },
+        {
+          path: 'unbind-company',
+          name: 'UnbindCompany',
+          component: ( ) => import('@/components/UnbindingCompany.vue')
+        }
+      ]
+    },
+    {
         path: '/comp',
         name: 'Company',
-        component: () => import('@/views/comp/index.vue')
+        component: () => import('@/views/compadmin/index.vue'),
+        children: [
+          { path: '/comp/info', name: 'CompanyInfo', component: () => import('@/views/compadmin/components/CompanyInfo.vue') },
+          { path: '/company/edit/:id', name: 'CompanyEdit', component: () => import('@/views/compadmin/components/CompanyEdit.vue') },
+          { path: '/comp/certification', name: 'CompanyCertification', component: () => import('@/views/compadmin/components/CompCertification.vue') },
+          { path: '/comp/comp-certification', name: 'CompanyCertification', component: () => import('@/views/compadmin/components/CompCertification.vue') },
+          { path: '/comp/user-certification', name: 'UserCertification', component: () => import('@/views/compadmin/components/UserCertification.vue') },
+          { path: '/comp/statetistic' , name: 'CompanyStatistic', component: () => import('@/views/compadmin/components/DataStatistic.vue')},
+          { path: '/comp/setting', name: 'CompanySetting', component: () => import('@/views/compadmin/components/CompSetting.vue')},
+          {
+            path: '/comp/unbind',
+            name: 'CompAdminUnbind',
+            component: () => import('@/components/UnbindingCompany.vue'),
+          },
+          {
+            path: '/comp/bind',
+            name: 'CompAdminBind',
+            component: () => import('@/components/BindCompany.vue'),
+          }
+        ]
     },
     {
       path: '/register',
       name: 'Register',
-      component: RegisterPage
+      component: RegisterPage,
     },
     {
       path: '/login',
@@ -45,11 +149,6 @@ const router = createRouter({
       name: 'Personal',
       component: () => import('@/views/personal/index.vue'),
       children: [
-          { 
-            path: '/personal/info', 
-            name: 'PersonalInfoPage', 
-            component: () => import('@/views/personal/components/PersonalInfo.vue'),
-          },
           { 
             path: '/personal/info/edit', 
             name: 'PersonalInfoEdit', 

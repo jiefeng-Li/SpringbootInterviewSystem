@@ -29,6 +29,18 @@ request.interceptors.request.use(
 // 响应拦截器
 request.interceptors.response.use(
   (res) => {
+    const contentType = res.headers?.['content-type'] || ''
+    const isBinaryResponse =
+      res.config?.responseType === 'blob' ||
+      res.config?.responseType === 'arraybuffer' ||
+      contentType.includes('application/pdf') ||
+      res.data instanceof Blob
+
+    // 二进制流（如PDF下载）直接放行
+    if (isBinaryResponse) {
+      return res
+    }
+
     // 摘取核心响应数据
     if (res.data.code === 200) {
       return res

@@ -2,10 +2,11 @@ package com.cuit.interviewsystem.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
-import java.util.Date;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 /**
  * 简历投递记录表
@@ -47,7 +48,7 @@ public class JobApplication {
     /**
      * 投递时间
      */
-    private Date applyTime;
+    private LocalDate applyTime;
 
     /**
      * 状态(0待处理,1已查看,2初筛通过,3初筛不通过,4面试中,5已发Offer,6已录用,7已淘汰)
@@ -73,10 +74,10 @@ public class JobApplication {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDate createTime;
 
     /**
      * 更新时间
      */
-    private Date updateTime;
+    private LocalDate updateTime;
 }

@@ -1,0 +1,248 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <title>个人简历</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 1.5cm;
+      }
+      body {
+        font-family: "Microsoft YaHei", Arial, sans-serif;
+        color: #2c3e50;
+        line-height: 1.5;
+        font-size: 14px;
+        margin: 0;
+        padding: 0;
+      }
+      .header {
+        border-bottom: 2px solid #2c3e50;
+        padding-bottom: 12px;
+        margin-bottom: 16px;
+      }
+      .name {
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0;
+      }
+      .contact {
+        margin-top: 8px;
+        color: #4b5563;
+      }
+      .avatar-box {
+        float: right;
+        width: 88px;
+        height: 88px;
+        border: 1px solid #d1d5db;
+        text-align: center;
+        line-height: 88px;
+        color: #9ca3af;
+        font-size: 12px;
+      }
+      .avatar {
+        width: 88px;
+        height: 88px;
+        object-fit: cover;
+      }
+      .clear {
+        clear: both;
+      }
+
+      .section {
+        margin-top: 14px;
+      }
+      .title {
+        font-size: 16px;
+        font-weight: 700;
+        border-left: 4px solid #2563eb;
+        padding-left: 8px;
+        margin-bottom: 10px;
+      }
+      .item {
+        padding: 8px 0;
+        border-bottom: 1px dashed #e5e7eb;
+      }
+      .item-head {
+        font-weight: 600;
+      }
+      .item-sub {
+        color: #4b5563;
+        margin: 2px 0;
+      }
+      .item-date {
+        color: #6b7280;
+        font-size: 13px;
+      }
+      .item-desc {
+        margin-top: 4px;
+        color: #374151;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+      .empty {
+        color: #9ca3af;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="avatar-box">
+        <img
+          class="avatar"
+          th:if="${resume.avatar != null and !#strings.isEmpty(resume.avatar)}"
+          th:src="${resume.avatar}"
+          alt="头像"
+        />
+        <span
+          th:if="${resume.avatar == null or #strings.isEmpty(resume.avatar)}"
+          >暂无头像</span
+        >
+      </div>
+      <h1
+        class="name"
+        th:text="${resume.name != null and !#strings.isEmpty(resume.name) ? resume.name : '未命名'}"
+      >
+        未命名
+      </h1>
+      <div class="contact">
+        电话：<span
+          th:text="${resume.phone != null and !#strings.isEmpty(resume.phone) ? resume.phone : '-'}"
+          >-</span
+        >
+        &#160;&#160; 邮箱：<span
+          th:text="${resume.email != null and !#strings.isEmpty(resume.email) ? resume.email : '-'}"
+          >-</span
+        >
+        <br />
+        地址：<span
+          th:text="${resume.address != null and !#strings.isEmpty(resume.address) ? resume.address : '-'}"
+          >-</span
+        >
+        &#160;&#160; 城市：<span
+          th:text="${resume.city != null and !#strings.isEmpty(resume.city) ? resume.city : '-'}"
+          >-</span
+        >
+      </div>
+      <div class="clear"></div>
+    </div>
+
+    <div class="section">
+      <div class="title">个人简介</div>
+      <div
+        th:text="${resume.summary != null and !#strings.isEmpty(resume.summary) ? resume.summary : '暂无个人简介'}"
+      >
+        暂无个人简介
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="title">教育经历</div>
+      <div th:if="${#lists.isEmpty(resume.educations)}" class="empty">
+        暂无教育经历
+      </div>
+      <div class="item" th:each="edu : ${resume.educations}">
+        <div class="item-head">
+          <span
+            th:text="${edu.school != null and !#strings.isEmpty(edu.school) ? edu.school : '未知学校'}"
+            >未知学校</span
+          >
+          -
+          <span
+            th:text="${edu.major != null and !#strings.isEmpty(edu.major) ? edu.major : '未知专业'}"
+            >未知专业</span
+          >
+          <span
+            th:text="${edu.degree != null and !#strings.isEmpty(edu.degree) ? ' · ' + edu.degree : ''}"
+          ></span>
+        </div>
+        <div class="item-date">
+          <span
+            th:text="${edu.startDate != null ? #temporals.format(edu.startDate, 'yyyy-MM') : '-'}"
+            >-</span
+          >
+          <span> - </span>
+          <span
+            th:text="${edu.endDate != null ? #temporals.format(edu.endDate, 'yyyy-MM') : '至今'}"
+            >至今</span
+          >
+        </div>
+        <div
+          class="item-desc"
+          th:text="${edu.description != null and !#strings.isEmpty(edu.description) ? edu.description : '暂无描述'}"
+        >
+          暂无描述
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="title">工作经历</div>
+      <div th:if="${#lists.isEmpty(resume.experiences)}" class="empty">
+        暂无工作经历
+      </div>
+      <div class="item" th:each="exp : ${resume.experiences}">
+        <div class="item-head">
+          <span
+            th:text="${exp.company != null and !#strings.isEmpty(exp.company) ? exp.company : '未知公司'}"
+            >未知公司</span
+          >
+          -
+          <span
+            th:text="${exp.position != null and !#strings.isEmpty(exp.position) ? exp.position : '未知职位'}"
+            >未知职位</span
+          >
+        </div>
+        <div class="item-date">
+          <span
+            th:text="${exp.startDate != null ? #dates.format(exp.startDate, 'yyyy-MM') : '-'}"
+            >-</span
+          >
+          <span> - </span>
+          <span
+            th:text="${exp.endDate != null ? #dates.format(exp.endDate, 'yyyy-MM') : '至今'}"
+            >至今</span
+          >
+        </div>
+        <div
+          class="item-desc"
+          th:text="${exp.description != null and !#strings.isEmpty(exp.description) ? exp.description : '暂无描述'}"
+        >
+          暂无描述
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="title">项目经历</div>
+      <div th:if="${#lists.isEmpty(resume.projects)}" class="empty">
+        暂无项目经历
+      </div>
+      <div class="item" th:each="project : ${resume.projects}">
+        <div
+          class="item-head"
+          th:text="${project.name != null and !#strings.isEmpty(project.name) ? project.name : '未知项目'}"
+        >
+          未知项目
+        </div>
+        <div class="item-date">
+          <span
+            th:text="${project.startDate != null ? #dates.format(project.startDate, 'yyyy-MM') : '-'}"
+            >-</span
+          >
+          <span> - </span>
+          <span
+            th:text="${project.endDate != null ? #dates.format(project.endDate, 'yyyy-MM') : '至今'}"
+            >至今</span
+          >
+        </div>
+        <div
+          class="item-desc"
+          th:text="${project.description != null and !#strings.isEmpty(project.description) ? project.description : '暂无描述'}"
+        >
+          暂无描述
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

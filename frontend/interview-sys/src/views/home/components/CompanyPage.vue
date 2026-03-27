@@ -60,7 +60,7 @@
             <el-pagination
               background
               layout="prev, pager, next"
-              :total="1000"
+              :total="total"
               :current-page="currentPage"
               @current-change="handlePageChange"
             />
@@ -70,14 +70,42 @@
           <div class="comp-card-container">
             <div class="company-card-box">
               <el-card
-                v-for="item in 24"
-                :key="item"
+                v-for="item in companyList"
+                :key="item.companyId"
                 class="company-card"
                 shadow="hover"
-                @click="goToCompanyDetail(item)"
-                >{{ item }}</el-card
+                @click="goToCompanyDetail(item.companyId)"
               >
+                <div class="company-logo-wrap">
+                  <img
+                    v-if="item.logoUrl"
+                    :src="item.logoUrl"
+                    alt="company-logo"
+                    class="company-logo"
+                  />
+                  <div v-else class="company-logo company-logo-fallback">
+                    {{ (item.companyName || "企").slice(0, 1) }}
+                  </div>
+                </div>
+                <div class="company-name">
+                  {{ item.companyName || "未命名公司" }}
+                </div>
+                <div class="company-meta">
+                  {{ item.city || "城市待定" }} ·
+                  {{ item.industry || "行业待定" }}
+                </div>
+                <div class="company-meta">
+                  规模：{{ item.scale || "未填写" }}
+                </div>
+                <!-- <div class="company-intro">
+                  {{ item.introduction || "暂无公司简介" }}
+                </div> -->
+              </el-card>
             </div>
+            <el-empty
+              v-if="!loading && companyList.length === 0"
+              description="暂无公司数据"
+            />
           </div>
         </el-main>
         <el-footer>
@@ -85,7 +113,7 @@
             <el-pagination
               background
               layout="prev, pager, next"
-              :total="1000"
+              :total="total"
               :current-page="currentPage"
               @current-change="handlePageChange"
             />
@@ -99,15 +127,22 @@
 
 <script setup>
 import { Search } from "@element-plus/icons-vue";
-import { ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
+import { getCompanyList } from "@/api/company";
 
 const router = useRouter();
 
 // 同步分页页码
 const currentPage = ref(1);
+const pageSize = ref(12);
+const total = ref(0);
+const loading = ref(false);
+const companyList = ref([]);
+
 const handlePageChange = (page) => {
   currentPage.value = page;
+  fetchCompanyList();
 };
 
 const keyword = ref("");
@@ -120,13 +155,36 @@ const companyConditions = ref({
 
 const value = ref("");
 const queryAndJump = () => {
-  console.log(keyword.value);
-  console.log("companyConditions: ", companyConditions.value);
+  currentPage.value = 1;
+  fetchCompanyList();
 };
 
 const querySearchAsync = (queryString, cb) => {
-  console.log(queryString);
-  console.log(companyConditions.value);
+  cb([]);
+};
+
+const fetchCompanyList = async () => {
+  loading.value = true;
+  try {
+    const params = {
+      companyName: keyword.value || undefined,
+      city: companyConditions.value.city,
+      industry: companyConditions.value.industry,
+      scale: companyConditions.value.scale,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
+    };
+    const res = await getCompanyList(params);
+    const data = res?.data.data;
+    companyList.value = data?.list || [];
+    total.value = data?.total || 0;
+  } catch (error) {
+    console.error("获取公司列表失败:", error);
+    companyList.value = [];
+    total.value = 0;
+  } finally {
+    loading.value = false;
+  }
 };
 
 const goToCompanyDetail = (companyId) => {
@@ -272,6 +330,19 @@ const scales = [
     label: "10000人以上",
   },
 ];
+
+watch(
+  companyConditions,
+  () => {
+    currentPage.value = 1;
+    fetchCompanyList();
+  },
+  { deep: true },
+);
+
+onMounted(() => {
+  fetchCompanyList();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -321,11 +392,61 @@ const scales = [
       .company-card {
         display: inline-block;
         width: 260px;
-        height: 150px;
+        min-height: 170px;
         background-color: white;
         margin: 10px;
         box-sizing: border-box;
         cursor: pointer;
+        padding: 14px 14px 12px;
+
+        .company-header {
+          display: flex;
+          align-items: flex-start;
+          margin-bottom: 12px;
+        }
+
+        .company-logo-wrap {
+          flex-shrink: 0;
+          margin-right: 10px; // 与名称拉开距离
+        }
+
+        .company-logo {
+          width: 48px;
+          height: 48px;
+          border-radius: 10px;
+          object-fit: cover;
+          border: 1px solid #f0f0f0;
+          background: #fff;
+        }
+
+        .company-logo-fallback {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+          font-weight: 700;
+          color: #1677ff;
+          background: #eef5ff;
+        }
+
+        .company-name {
+          flex: 1;
+          font-size: 17px;
+          font-weight: 700;
+          color: #222;
+          line-height: 1.35;
+          margin-top: 2px;
+          word-break: break-all;
+        }
+
+        .company-info-line {
+          font-size: 13px;
+          color: #666;
+          line-height: 1.7;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
       }
     }
   }

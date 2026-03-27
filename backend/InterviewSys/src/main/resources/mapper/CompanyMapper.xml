@@ -49,15 +49,15 @@
         FROM t_company c
         LEFT JOIN t_user u ON c.admin_id = u.user_id
         WHERE c.company_id = #{companyId}
-        AND c.is_deleted = 0 AND c.status = 1;
+        AND c.is_deleted = 0;
     </select>
     <select id="getCompanyVoPage" resultType="com.cuit.interviewsystem.model.vo.CompanyVo">
         SELECT
             c.*,u.username as admin_name
         FROM t_company c
                  LEFT JOIN t_user u ON c.admin_id = u.user_id
-        WHERE
-        <if test="dto.companyName != null">
+        WHERE c.is_deleted = 0 AND c.status = 1
+        <if test="dto.companyName != null and dto.companyName != ''">
             AND c.company_name LIKE CONCAT('%',#{dto.companyName},'%')
         </if>
         <if test="dto.industry != null">
@@ -68,6 +68,28 @@
         </if>
         <if test="dto.city != null">
             AND c.city = #{dto.city}
-        </if> AND c.is_deleted = 0 AND c.status = 1
+        </if>
+    </select>
+    <select id="adminGetCompanyVoPage" resultType="com.cuit.interviewsystem.model.vo.CompanyVo">
+        SELECT
+        c.*,u.username as admin_name
+        FROM t_company c
+        LEFT JOIN t_user u ON c.admin_id = u.user_id
+        WHERE c.is_deleted = 0
+        <if test="dto.status != null">
+            AND c.status = #{dto.status}
+        </if>
+        <if test="dto.companyName != null and dto.companyName != ''">
+            AND c.company_name LIKE CONCAT('%',#{dto.companyName},'%')
+        </if>
+        <if test="dto.industry != null">
+            AND c.industry = #{dto.industry}
+        </if>
+        <if test="dto.scale != null">
+            AND c.scale = #{dto.scale}
+        </if>
+        <if test="dto.city != null">
+            AND c.city = #{dto.city}
+        </if>
     </select>
 </mapper>

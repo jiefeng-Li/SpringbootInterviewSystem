@@ -61,3 +61,33 @@ export const deleteOneUser = (id) => {
     url: `/user/${id}`
   })
 }
+
+export const getUserPage = (data) => {
+  return request({
+    method: 'get',
+    url: '/user/list',
+    params: data
+  })
+}
+
+export const getUserRoleList = () => {
+  return request({
+    method: 'get',
+    url: '/user/roles'
+  })
+}
+
+export const getUserStatusList = () => {
+  return request({
+    method: 'get',
+    url: '/user/status'
+  })
+}
+
+export const updateUserStatus = (id, data) => {
+  return request({
+    method: 'put',
+    url: `/user/${id}/status`,
+    data
+  })
+}

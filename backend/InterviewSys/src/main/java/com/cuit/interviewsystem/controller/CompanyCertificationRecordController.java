@@ -50,7 +50,7 @@ public class CompanyCertificationRecordController {
     @Operation(summary = "提交企业认证")
     @PostMapping
     @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
-    public Result<Long> companyCertification(CompanyCertificationRecordAddDto ccrad) {
+    public Result<Long> addCompanyCertification(@RequestBody CompanyCertificationRecordAddDto ccrad) {
         long recordId = recordService.addCompanyCertificationRecord(ccrad);
         if (recordId == 0)
             return Result.error(ErrorEnum.SYSTEM_ERROR, "提交失败");
@@ -81,7 +81,7 @@ public class CompanyCertificationRecordController {
     }
 
     @GetMapping("/list")
-    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN})
     public Result<?> companyCertificationList(CertificationRecordPageDto dto) {
         Page<CompanyCertificationRecordVo> page = recordService.getRecords(dto);
         PageVo<CompanyCertificationRecordVo> res = PageVo.of(page);

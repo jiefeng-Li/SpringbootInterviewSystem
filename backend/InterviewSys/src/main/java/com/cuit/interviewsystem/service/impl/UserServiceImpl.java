@@ -13,18 +13,16 @@ import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.CompanyMapper;
 import com.cuit.interviewsystem.model.dto.company.CommonUserRegister;
-import com.cuit.interviewsystem.model.dto.user.UserLoginDto;
-import com.cuit.interviewsystem.model.dto.user.UserPageDto;
-import com.cuit.interviewsystem.model.dto.user.UserRegisterDto;
-import com.cuit.interviewsystem.model.dto.user.UsersAddDto;
-import com.cuit.interviewsystem.model.entity.Company;
+import com.cuit.interviewsystem.model.dto.user.*;
 import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.mapper.UserMapper;
+import com.cuit.interviewsystem.utils.AliOSSUtil;
 import com.cuit.interviewsystem.utils.JWTUtil;
+import com.cuit.interviewsystem.utils.RedisUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -33,10 +31,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
 * @author jiefe
@@ -52,6 +53,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private CompanyMapper companyMapper;
     @Resource
     private JWTUtil jwtUtil;
+    @Resource
+    private AliOSSUtil aliOSSUtil;
 
     private final Digester digester = new Digester(DigestAlgorithm.SHA512);
 
@@ -166,9 +169,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
         }
         delUser.setIsDeleted(1);
-        delUser.setUpdateTime(new Date());
+        delUser.setUpdateTime(LocalDate.now());
         if (UserRoleEnum.SYS_ADMIN.equals(optRole)) {
-            delUser.setEditTime(new Date());
+            delUser.setEditTime(LocalDate.now());
         }
         return userMapper.updateById(delUser);
     }
@@ -192,12 +195,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userLoginDto.setPassword(digester.digestHex(userLoginDto.getPassword() + SALT));
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<User>();
         lambdaQueryWrapper.eq(User::getPassword, userLoginDto.getPassword())
+                                .eq(User::getIsDeleted, 0)
                 .and(i -> i.eq(User::getPhone, userLoginDto.getAccount())
                         .or().eq(User::getUsername, userLoginDto.getAccount())
                         .or().eq(User::getEmail, userLoginDto.getAccount()));
         User user = userMapper.selectOne(lambdaQueryWrapper);
         if (!ObjUtil.isEmpty(user)) {
-            user.setLastLoginTime(new Date());
+                        ThrowUtil.throwIfTrue(!UserAccountStatusEnum.NORMAL.getStatus().equals(user.getAccountStatus()),
+                                        ErrorEnum.UNAUTHORIZED, "账号状态异常，请联系管理员");
+            user.setLastLoginTime(LocalDate.now());
             //异步更新登录时间
             CompletableFuture.runAsync(() -> userMapper.updateById(user));
         }
@@ -284,46 +290,127 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
 
     @Override
-    public int updateOneUser(Long id, User user) {
+    public User updateOneUser(Long id, UserUpdateDto user) {
         ThrowUtil.throwIfTrue(id == null,
                 ErrorEnum.PARAMS_ERROR, "路径请求参数为空");
         ThrowUtil.throwIfTrue(
                 ObjUtil.isEmpty(user),
                 new BusinessException(ErrorEnum.PARAMS_ERROR, "数据不能为空"));
-        ThrowUtil.throwIfTrue(!id.equals(user.getUserId()),
-                ErrorEnum.PARAMS_ERROR, "路径参数与请求体数据不匹配");
-        this.objectCheck(user);
+        ThrowUtil.throwIfTrue(userMapper.exists(new LambdaQueryWrapper<User>()
+                        .ne(User::getUserId, id)
+                        .eq(User::getIsDeleted, 0)
+                        .eq(User::getUsername, user.getUsername())),
+                ErrorEnum.PARAMS_ERROR, "用户名已存在");
         //获取当前操作用户，若为管理员则需要修改editTime字段
         User optUser = userMapper.selectById(jwtUtil.getLoginUserInfo(JWTUtil.ELEMENT.USER_ID));
         //权限校验，若权限不足则无法修改用户角色、账号状态字段。
-        User old = userMapper.selectById(id);
-
+        User target = userMapper.selectById(id);
         if (UserRoleEnum.SYS_ADMIN.getValue().equals(optUser.getRole())) {
-            user.setEditTime(new Date());
+            target.setEditTime(LocalDate.now());
         } else if (UserRoleEnum.COMP_ADMIN.getValue().equals(optUser.getRole())) {
             // 企业管理员无法修改不属于本企业的用户数据
-            ThrowUtil.throwIfTrue(!Objects.equals(old.getCompanyId(), user.getCompanyId()),
+            ThrowUtil.throwIfTrue(!Objects.equals(target.getCompanyId(), optUser.getCompanyId()),
                     ErrorEnum.UNAUTHORIZED);
             // 企业管理员无法修改用户角色为系统管理员
-            ThrowUtil.throwIfTrue(UserRoleEnum.SYS_ADMIN.equals(UserRoleEnum.getRole(user.getRole())),
-                    ErrorEnum.UNAUTHORIZED);
-            // 企业管理员无法修改同公司用户状态为求职者
-            ThrowUtil.throwIfTrue(UserRoleEnum.JOB_SEEKER.equals(UserRoleEnum.getRole(user.getRole())),
+            ThrowUtil.throwIfTrue(UserRoleEnum.SYS_ADMIN.equals(UserRoleEnum.getRole(target.getRole())),
                     ErrorEnum.UNAUTHORIZED);
             // 企业管理员无法修改其他管理员的信息
-            ThrowUtil.throwIfTrue(UserRoleEnum.COMP_ADMIN.equals(UserRoleEnum.getRole(old.getRole()))
-                            && !Objects.equals(old.getUserId(), optUser.getUserId())
-                            || UserRoleEnum.SYS_ADMIN.equals(UserRoleEnum.getRole(old.getRole())),
+            ThrowUtil.throwIfTrue(UserRoleEnum.COMP_ADMIN.equals(UserRoleEnum.getRole(target.getRole()))
+                            && !Objects.equals(target.getUserId(), optUser.getUserId())
+                            || UserRoleEnum.SYS_ADMIN.equals(UserRoleEnum.getRole(target.getRole())),
                     ErrorEnum.UNAUTHORIZED);
-            user.setEditTime(new Date());
+            target.setEditTime(LocalDate.now());
         } else {
-            ThrowUtil.throwIfTrue(!Objects.equals(old.getUserId(), user.getUserId()),
+            ThrowUtil.throwIfTrue(!Objects.equals(target.getUserId(), optUser.getUserId()),
                     ErrorEnum.UNAUTHORIZED);
         }
-        user.setPassword(digester.digestHex(user.getPassword() + SALT));
-        user.setUpdateTime(new Date());
-        return userMapper.updateById(user);
+        target.setProfile(user.getProfile());
+        target.setUsername(user.getUsername());
+        target.setUpdateTime(LocalDate.now());
+
+        // 处理头像上传
+        if (user.getAvatar() != null ) {
+            try {
+                // 校验文件类型
+                String originalFilename = user.getAvatar().getOriginalFilename();
+                if (originalFilename == null) {
+                    throw new BusinessException(ErrorEnum.PARAMS_ERROR, "头像文件名不能为空");
+                }
+                // 允许的图片类型
+                String[] allowedTypes = {"jpg", "jpeg", "png", "gif", "bmp", "webp"};
+                String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+                boolean isValidType = false;
+                for (String type : allowedTypes) {
+                    if (type.equals(fileExtension)) {
+                        isValidType = true;
+                        break;
+                    }
+                }
+                if (!isValidType) {
+                    throw new BusinessException(ErrorEnum.PARAMS_ERROR, "头像文件类型不支持，仅支持jpg、jpeg、png、gif、bmp、webp格式");
+                }
+
+                // 校验文件大小（5MB = 5 * 1024 * 1024 bytes）
+                long maxSize = 5 * 1024 * 1024;
+                if (user.getAvatar().getSize() > maxSize) {
+                    throw new BusinessException(ErrorEnum.PARAMS_ERROR, "头像文件大小不能超过5MB");
+                }
+
+                // 上传文件
+                String avatarUrl = aliOSSUtil.uploadFile(user.getAvatar(), id.toString());
+                target.setAvatarUrl(avatarUrl);
+            } catch (IOException e) {
+                throw new BusinessException(ErrorEnum.SYSTEM_ERROR, "头像上传失败");
+            }
+        }
+        userMapper.update(target, new LambdaUpdateWrapper<User>().eq(User::getUserId, id));
+        return target;
     }
+
+        @Override
+        public int updateUserStatusByAdmin(Long id, Integer accountStatus) {
+                ThrowUtil.throwIfTrue(id == null || id <= 0, ErrorEnum.PARAMS_ERROR, "用户ID错误");
+                UserAccountStatusEnum statusEnum = UserAccountStatusEnum.getEnumByStatus(accountStatus);
+                ThrowUtil.throwIfTrue(statusEnum == null, ErrorEnum.PARAMS_ERROR, "账号状态错误");
+
+                User target = userMapper.selectById(id);
+                ThrowUtil.throwIfTrue(target == null, ErrorEnum.NOT_FOUND_ERROR, "用户不存在");
+                ThrowUtil.throwIfTrue(target.getIsDeleted() == 1, ErrorEnum.PARAMS_ERROR, "用户已注销");
+
+                target.setAccountStatus(accountStatus);
+                target.setUpdateTime(LocalDate.now());
+                target.setEditTime(LocalDate.now());
+                if (UserAccountStatusEnum.DEREGISTER.equals(statusEnum)) {
+                        target.setIsDeleted(1);
+                }
+                return userMapper.updateById(target);
+        }
+
+        @Override
+        public int deregisterSelf() {
+                User cur = jwtUtil.parseLoginUser();
+                ThrowUtil.throwIfTrue(cur == null || cur.getUserId() == null, ErrorEnum.NOT_LOGIN_ERROR, "未登录");
+                User target = userMapper.selectById(cur.getUserId());
+                ThrowUtil.throwIfTrue(target == null, ErrorEnum.NOT_FOUND_ERROR, "用户不存在");
+                ThrowUtil.throwIfTrue(target.getIsDeleted() == 1 || UserAccountStatusEnum.DEREGISTER.getStatus().equals(target.getAccountStatus()),
+                                ErrorEnum.PARAMS_ERROR, "账号已注销");
+
+                if (Objects.equals(target.getRole(), UserRoleEnum.COMP_ADMIN.getValue()) && target.getCompanyId() != null) {
+                        if (!userMapper.exists(new LambdaUpdateWrapper<User>()
+                                                        .eq(User::getCompanyId, target.getCompanyId())
+                                                        .ne(User::getUserId, target.getUserId())
+                                                        .eq(User::getIsDeleted, 0)
+                                                        .eq(User::getAccountStatus, UserAccountStatusEnum.NORMAL.getStatus()))
+                                        && !Objects.equals(companyMapper.selectById(target.getCompanyId()).getStatus(), CompanyStatusEnum.DEREGISTER.getStatus())) {
+                                throw new BusinessException(ErrorEnum.PARAMS_ERROR, "该公司不存在其他正常管理员，请先处理公司注销或管理员交接");
+                        }
+                }
+
+                target.setAccountStatus(UserAccountStatusEnum.DEREGISTER.getStatus());
+                target.setIsDeleted(1);
+                target.setUpdateTime(LocalDate.now());
+                return userMapper.updateById(target);
+        }
 
     private void objectCheck(User user) {
         //region 1. 实体数据校验

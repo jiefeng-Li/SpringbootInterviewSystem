@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import java.util.List;
+
 
 @EqualsAndHashCode(callSuper = true)
 @Data
@@ -15,4 +17,5 @@ public class JobApplicationPageDto extends PageDto {
     private Long companyId;
     private Long jobPositionId;
     private Integer status; // job application status
+    private List<Integer> statusList;
 }

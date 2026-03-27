@@ -36,19 +36,19 @@
         FROM t_company_certification_record record
                  LEFT JOIN t_company company
                            ON record.company_id = company.company_id
-                                  <if test="dto.companyId != null">
-                                      and  record.company_id = #{dto.companyId}
-                                  </if>
                  LEFT JOIN t_user admin_user
                            ON record.admin_id = admin_user.user_id
                  LEFT JOIN t_user reviewer_user
                            ON record.reviewed_by = reviewer_user.user_id
-                            <if test="dto.reviewBy != null">
-                                and record.reviewed_by = #{dto.reviewBy}
-                            </if>
         WHERE record.is_deleted = #{dto.isDeleted}
         <if test="dto.status != null">
             and record.status = #{dto.status}
+        </if>
+        <if test="dto.companyId != null">
+            and  record.company_id = #{dto.companyId}
+        </if>
+        <if test="dto.reviewBy != null">
+            and record.reviewed_by = #{dto.reviewBy}
         </if>
         ORDER BY record.update_time DESC
     </select>

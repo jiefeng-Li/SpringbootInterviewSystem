@@ -34,6 +34,7 @@
       <CompAdminAside />
     </template>
     <template #main>
+      <!-- <CompanyAdminMain /> -->
       <router-view />
     </template>
   </BaseLayout>
@@ -69,13 +70,7 @@ const handleLogout = () => {
 };
 
 onMounted(() => {
-  console.log("userStore.isloginned: ", userStore.isloginned);
-  // 检查用户是否已登录
-  if (userStore.isloginned) {
-    // 如果已登录，可以在这里获取用户信息或执行其他操作
-    console.log("用户已登录");
-  } else {
-    console.log("用户未登录");
+  if (!userStore.isloginned) {
     ElMessage({
       message: "请先登录",
       type: "warning",

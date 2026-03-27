@@ -30,6 +30,7 @@
         <result property="coverLetter" column="cover_letter" />
         <result property="remarks" column="remarks" />
         <result property="jobTitle" column="job_title" />
+        <result property="jobSeekerName" column="job_seeker_name" />
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -48,9 +49,11 @@
             apply.status,
             apply.cover_letter,
             apply.remarks,
-            position.title AS job_title
+            position.title AS job_title,
+            user.username AS job_seeker_name
         FROM t_job_application apply
         LEFT JOIN t_job_position position ON apply.job_position_id = position.id
+        LEFT JOIN t_user user ON apply.user_id = user.user_id
         WHERE apply.is_deleted = 0
         <if test="dto.companyId != null">
             AND apply.company_id = #{dto.companyId}
@@ -60,6 +63,46 @@
         </if>
         <if test="dto.status != null">
             AND apply.status = #{dto.status}
+        </if>
+        <if test="dto.statusList != null and dto.statusList.size() > 0">
+            AND apply.status IN
+            <foreach collection="dto.statusList" item="status" open="(" separator="," close=")">
+                #{status}
+            </foreach>
+        </if>
+        ORDER BY apply.apply_time DESC
+    </select>
+    <select id="getOwnJobApplicationPage" resultType="com.cuit.interviewsystem.model.vo.JobApplicationVo">
+        SELECT
+        apply.id as id,
+        apply.company_id as company_id,
+        apply.job_position_id as job_position_id,
+        apply.user_id as use_id,
+        apply.resume_id as resume_id,
+        apply.apply_time as apply_time,
+        apply.status as status,
+        apply.cover_letter as cover_letter,
+        apply.remarks as remarks,
+        position.title AS job_title,
+        user.username AS job_seeker_name
+        FROM t_job_application apply
+        LEFT JOIN t_job_position position ON apply.job_position_id = position.id
+        LEFT JOIN t_user user ON apply.user_id = user.user_id
+        WHERE apply.is_deleted = 0
+        <if test="pageDto.userId != null">
+            AND apply.user_id = #{pageDto.userId}
+        </if>
+        <if test="pageDto.companyId != null">
+            AND apply.company_id = #{pageDto.companyId}
+        </if>
+        <if test="pageDto.resumeId != null">
+            AND apply.resume_id = #{pageDto.resumeId}
+        </if>
+        <if test="pageDto.jobPositionId != null">
+            AND apply.job_position_id = #{pageDto.jobPositionId}
+        </if>
+        <if test="pageDto.status != null">
+            AND apply.status = #{pageDto.status}
         </if>
         ORDER BY apply.apply_time DESC
     </select>

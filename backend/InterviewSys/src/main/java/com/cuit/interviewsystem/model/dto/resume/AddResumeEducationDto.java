@@ -7,7 +7,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class AddResumeEducationDto implements Serializable {
@@ -38,13 +38,13 @@ public class AddResumeEducationDto implements Serializable {
      * 开始时间
      */
     @NotNull(message = "开始时间不能为空")
-    private Date startDate;
+    private LocalDate startDate;
 
     /**
      * 毕业时间（或至今）
      */
     @NotNull(message = "结束时间不能为空")
-    private Date endDate;
+    private LocalDate endDate;
 
     /**
      * 在校经历、荣誉等

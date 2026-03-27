@@ -7,7 +7,7 @@ import org.hibernate.validator.constraints.Length;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class AddResumeExperiencesDto implements Serializable {
@@ -31,13 +31,13 @@ public class AddResumeExperiencesDto implements Serializable {
      * 开始时间
      */
     @NotNull(message = "开始时间不能为空")
-    private Date startDate;
+    private LocalDate startDate;
 
     /**
      * 结束时间（或至今）
      */
     @NotNull(message = "结束时间不能为空")
-    private Date endDate;
+    private LocalDate endDate;
 
     /**
      * 工作内容、业绩等

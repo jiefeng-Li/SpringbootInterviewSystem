@@ -2,8 +2,6 @@ package com.cuit.interviewsystem.model.vo;
 
 import cn.hutool.json.JSONUtil;
 
-import com.cuit.interviewsystem.exception.BusinessException;
-import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.model.entity.JobPosition;
 import com.cuit.interviewsystem.model.enums.JobPositionStatusEnum;
 import com.cuit.interviewsystem.model.enums.JobTypeEnum;
@@ -13,7 +11,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -101,7 +99,7 @@ public class JobPositionVo implements Serializable {
     /**
      * 发布时间
      */
-    private Date publishTime;
+    private LocalDate publishTime;
 
     /**
      * 浏览量
@@ -113,7 +111,7 @@ public class JobPositionVo implements Serializable {
      */
     private Integer applyCount;
 
-    private Date createTime;
+    private LocalDate createTime;
 
     public static JobPosition voToObj(JobPositionVo jobPositionVo) {
         if (jobPositionVo == null) {
@@ -122,6 +120,8 @@ public class JobPositionVo implements Serializable {
         JobPosition jobPosition = new JobPosition();
         BeanUtils.copyProperties(jobPositionVo, jobPosition);
         // 类型不同，需要转换
+        jobPosition.setStatus(JobPositionStatusEnum.getEnum(jobPositionVo.getStatus()));
+        jobPosition.setJobType(JobTypeEnum.getEnum(jobPositionVo.getJobType()));
         jobPosition.setTags(JSONUtil.toJsonStr(jobPositionVo.getTags()));
         return jobPosition;
     }
@@ -136,6 +136,8 @@ public class JobPositionVo implements Serializable {
         JobPositionVo jobPositionVo = new JobPositionVo();
         BeanUtils.copyProperties(jobPosition, jobPositionVo);
         // 类型不同，需要转换
+        jobPositionVo.setStatus(jobPosition.getStatus().getText());
+        jobPositionVo.setJobType(jobPosition.getJobType().getText());
         jobPositionVo.setTags(JSONUtil.toList(jobPosition.getTags(), String.class));
         return jobPositionVo;
     }

@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 
 @Data
 public class UpdateJobDto implements Serializable {
@@ -40,7 +41,7 @@ public class UpdateJobDto implements Serializable {
     /**
      * 职位标签
      */
-    private String tags;
+    private List<String> tags;
 
     /**
      * 最低薪资

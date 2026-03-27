@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.InterviewNoticeMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.InterviewNotice">
+            <id property="id" column="id" />
+            <result property="jobApplicationId" column="job_application_id" />
+            <result property="intervieweeId" column="interviewee_id"/>
+            <result property="companyId" column="company_id"/>
+            <result property="interviewTime" column="interview_time" />
+            <result property="interviewAddress" column="interview_address" />
+            <result property="comment" column="comment" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,job_application_id,interview_time,interview_address,comment,is_deleted,
+        create_time,update_time
+    </sql>
+    <select id="getNoticeVoList" resultType="com.cuit.interviewsystem.model.vo.InterviewNoticeVo">
+        select
+            notice.*, company.company_name as company_name
+        from t_interview_notice notice
+            LEFT JOIN t_company company on notice.company_id = company.company_id
+        where notice.is_deleted = 0
+        <if test="dto.companyId != null">
+            and notice.company_id = #{dto.companyId}
+        </if>
+        <if test="dto.intervieweeId != null">
+            and notice.interviewee_id = #{dto.intervieweeId}
+        </if>
+        <if test="dto.start != null">
+            and notice.interview_time >= #{dto.start}
+        </if>
+        <if test="dto.end != null">
+            and notice.interview_time &lt;= #{dto.end}
+        </if>
+        order by notice.update_time desc
+    </select>
+    <select id="selectNoticeVoById" resultType="com.cuit.interviewsystem.model.vo.InterviewNoticeVo">
+        select
+        notice.*, company.company_name as company_name
+        from t_interview_notice notice
+        LEFT JOIN t_company company on notice.company_id = company.company_id
+        where notice.is_deleted = 0 and notice.id = #{noticeId}
+    </select>
+</mapper>

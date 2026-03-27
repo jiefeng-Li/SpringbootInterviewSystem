@@ -1,10 +1,8 @@
 package com.cuit.interviewsystem.model.vo;
 
-
-import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class CompanyCertificationRecordVo {
@@ -23,7 +21,7 @@ public class CompanyCertificationRecordVo {
     private Long reviewedBy;
     private String reviewedByName;
     private Integer isDeleted;
-    private Date reviewedTime;
-    private Date createTime;
-    private Date updateTime;
+    private LocalDate reviewedTime;
+    private LocalDate createTime;
+    private LocalDate updateTime;
 }

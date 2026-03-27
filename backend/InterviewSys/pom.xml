@@ -148,6 +148,11 @@
             <version>9.13.3</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf</artifactId>
+            <version>9.13.3</version>
+        </dependency>
         <!--endregion-->
 
         <!-- region thymeleaf -->
@@ -156,6 +161,19 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
         <!--endregion-->
+
+        <!--redis依赖配置-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <exclusions>
+                <!-- 排除自带的logback依赖 -->
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
     <dependencyManagement>
         <dependencies>

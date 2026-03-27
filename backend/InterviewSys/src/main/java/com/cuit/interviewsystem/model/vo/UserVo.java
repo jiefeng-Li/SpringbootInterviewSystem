@@ -1,14 +1,12 @@
 package com.cuit.interviewsystem.model.vo;
 
 import cn.hutool.core.util.DesensitizedUtil;
-import cn.hutool.core.util.PhoneUtil;
 import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
-import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.Objects;
 
 
@@ -57,7 +55,7 @@ public class UserVo {
     /**
      * 最后登录时间
      */
-    private Date lastLoginTime;
+    private LocalDate lastLoginTime;
 
     /**
      * 逻辑删除(0未删,1已删)
@@ -67,17 +65,17 @@ public class UserVo {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDate createTime;
 
     /**
      * 更新时间
      */
-    private Date updateTime;
+    private LocalDate updateTime;
 
     /**
      * 系统更新时间
      */
-    private Date editTime;
+    private LocalDate editTime;
 
     /**
      * 用户所属公司ID
@@ -95,7 +93,7 @@ public class UserVo {
         res.setPhone(DesensitizedUtil.mobilePhone(res.getPhone()));
         res.setEmail(DesensitizedUtil.email(res.getEmail()));
         res.setAccountStatus(Objects.requireNonNull(UserAccountStatusEnum.getEnumByStatus(user.getAccountStatus())).getText());
-        res.setRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(res.getRole())).getText());
+//        res.setRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(res.getRole())).getText());
         return res;
     }
 }

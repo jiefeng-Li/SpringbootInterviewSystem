@@ -3,9 +3,54 @@ spring:
     name: InterviewSys
   profiles:
     active: prod
+  servlet:
+    multipart:
+#      enabled: true
+#      max-file-size: 10MB
+      max-request-size: 50MB
+#      file-size-threshold: 2MB
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 8
+          max-wait: -1ms
+          max-idle: 8
+          min-idle: 0
+  thymeleaf:
+    prefix: classpath:/templates/
+    suffix: .html
+    mode: HTML
+    encoding: UTF-8
+    cache: false
+    servlet:
+      content-type: text/html
+
+# Tomcat 配置
+server:
+  tomcat:
+#    max-swallow-size: -1
+    max-http-form-post-size: 50MB
+#    connection-timeout: 30000
+#    threads:
+#      max: 200
+#      min-spare: 10
+    # 设置最大文件数量
+#    max-connections: 10000
+#    accept-count: 100
+    # 设置 multipart 配置
+    # 设置最大参数数量
+#    max-parameters: 1000
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 const-var:
   password-match-rule: ^(?=.*[0-9])(?=.*[a-zA-Z])[a-zA-Z0-9]{8,20}$
   email-match-rule: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$

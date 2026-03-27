@@ -5,10 +5,6 @@
         <el-icon><Avatar /></el-icon>
         <span>我的</span>
       </el-menu-item>
-      <el-menu-item index="/personal/info">
-        <el-icon><Grid /></el-icon>
-        <span>账号管理</span>
-      </el-menu-item>
       <el-menu-item index="/personal/message">
         <el-icon><Message /></el-icon>
         <span>消息</span>

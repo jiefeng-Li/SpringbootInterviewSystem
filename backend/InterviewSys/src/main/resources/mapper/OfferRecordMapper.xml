@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cuit.interviewsystem.mapper.OfferRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.cuit.interviewsystem.model.entity.OfferRecord">
+            <id property="id" column="id" />
+            <result property="jobApplicationId" column="job_application_id" />
+            <result property="companyId" column="company_id" />
+            <result property="jobSeekerId" column="job_seeker_id" />
+            <result property="recruiterId" column="recruiter_id" />
+            <result property="interviewNoticeId" column="interview_notice_id" />
+            <result property="jobPositionId" column="job_position_id" />
+            <result property="expectedEntryDate" column="expected_entry_date" />
+            <result property="salaryMonthly" column="salary_monthly" />
+            <result property="salaryMonthCount" column="salary_month_count" />
+            <result property="probationMonths" column="probation_months" />
+            <result property="offerDeadline" column="offer_deadline" />
+            <result property="status" column="status" />
+            <result property="welfare" column="welfare" />
+            <result property="remark" column="remark" />
+            <result property="rejectReason" column="reject_reason" />
+            <result property="respondTime" column="respond_time" />
+            <result property="isDeleted" column="is_deleted" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,job_application_id,company_id,job_seeker_id,recruiter_id,interview_notice_id,
+        job_position_id,expected_entry_date,salary_monthly,salary_month_count,probation_months,
+        offer_deadline,status,welfare,remark,reject_reason,
+        respond_time,is_deleted,create_time,update_time
+    </sql>
+
+    <select id="getOfferPageByUser" resultType="com.cuit.interviewsystem.model.vo.OfferRecordVo">
+        select
+            offer.*,
+            company.company_name as company_name,
+            seeker.username as job_seeker_name,
+            recruiter.username as recruiter_name,
+            position.title as job_title
+        from t_offer_record offer
+            left join t_company company on offer.company_id = company.company_id
+            left join t_user seeker on offer.job_seeker_id = seeker.user_id
+            left join t_user recruiter on offer.recruiter_id = recruiter.user_id
+            left join t_job_position position on offer.job_position_id = position.id
+        where offer.is_deleted = 0
+          and offer.job_seeker_id = #{dto.userId}
+        <if test="dto.status != null">
+            and offer.status = #{dto.status}
+        </if>
+        order by offer.update_time desc
+    </select>
+
+    <select id="getOfferPageByRecruiter" resultType="com.cuit.interviewsystem.model.vo.OfferRecordVo">
+        select
+            offer.*,
+            company.company_name as company_name,
+            seeker.username as job_seeker_name,
+            recruiter.username as recruiter_name,
+            position.title as job_title
+        from t_offer_record offer
+            left join t_company company on offer.company_id = company.company_id
+            left join t_user seeker on offer.job_seeker_id = seeker.user_id
+            left join t_user recruiter on offer.recruiter_id = recruiter.user_id
+            left join t_job_position position on offer.job_position_id = position.id
+        where offer.is_deleted = 0
+          and offer.recruiter_id = #{dto.recruiterId}
+        <if test="dto.companyId != null">
+            and offer.company_id = #{dto.companyId}
+        </if>
+        <if test="dto.status != null">
+            and offer.status = #{dto.status}
+        </if>
+        order by offer.update_time desc
+    </select>
+
+    <select id="selectOfferVoById" resultType="com.cuit.interviewsystem.model.vo.OfferRecordVo">
+        select
+            offer.*,
+            company.company_name as company_name,
+            seeker.username as job_seeker_name,
+            recruiter.username as recruiter_name,
+            position.title as job_title
+        from t_offer_record offer
+            left join t_company company on offer.company_id = company.company_id
+            left join t_user seeker on offer.job_seeker_id = seeker.user_id
+            left join t_user recruiter on offer.recruiter_id = recruiter.user_id
+            left join t_job_position position on offer.job_position_id = position.id
+        where offer.is_deleted = 0
+          and offer.id = #{id}
+    </select>
+
+    <select id="countPendingOfferByApplicationId" resultType="java.lang.Integer">
+        select count(1)
+        from t_offer_record
+        where is_deleted = 0
+          and job_application_id = #{jobApplicationId}
+          and status = 0
+    </select>
+</mapper>

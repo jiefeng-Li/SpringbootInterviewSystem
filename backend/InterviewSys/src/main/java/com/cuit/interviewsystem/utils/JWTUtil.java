@@ -79,7 +79,9 @@ public class JWTUtil {
         User res = new User();
         res.setUserId(Long.parseLong(parse(token, ELEMENT.USER_ID)));
         res.setRole(parse(token, ELEMENT.ROLE));
-        res.setCompanyId(Long.parseLong(parse(token, ELEMENT.COMPANY_ID)));
+        String cmpStr = parse(token, ELEMENT.COMPANY_ID);
+        if (cmpStr != null)
+            res.setCompanyId(Long.parseLong(cmpStr));
         return res;
     }
 

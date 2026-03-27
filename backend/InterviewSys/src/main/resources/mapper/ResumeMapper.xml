@@ -44,6 +44,7 @@
             <result property="degree" column="edu_degree" />
             <result property="startDate" column="edu_start_date" />
             <result property="endDate" column="edu_end_date" />
+            <result property="description" column="edu_description" />
         </collection>
         <collection property="experiences" ofType="com.cuit.interviewsystem.model.vo.ResumeExperienceVo">
             <id property="id" column="exp_id" />
@@ -81,6 +82,7 @@
             e.degree as edu_degree,
             e.start_date as edu_start_date,
             e.end_date as edu_end_date,
+            e.description as edu_description,
             ex.id as exp_id,
             ex.company as exp_company,
             ex.position as exp_position,
@@ -104,7 +106,7 @@
         WHERE r.user_id = #{userId} AND r.is_deleted = 0
         ORDER BY r.create_time DESC
     </select>
-    <select id="selectVoById" resultType="com.cuit.interviewsystem.model.vo.ResumeVo">
+    <select id="selectVoById" resultMap="ResumeVoResultMap">
         SELECT
             <include refid="ResumeVo_Column_List" />
         FROM t_resume r

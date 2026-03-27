@@ -7,12 +7,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.UserMapper;
+import com.cuit.interviewsystem.model.dto.company.AdminCompanySearchPageDto;
 import com.cuit.interviewsystem.model.dto.company.CompanyAddDto;
 import com.cuit.interviewsystem.model.dto.company.CompanyInfoDto;
 import com.cuit.interviewsystem.model.dto.company.CompanySearchPageDto;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
+import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.CompanyVo;
 import com.cuit.interviewsystem.service.CompanyService;
@@ -28,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Date;
 
 /**
@@ -49,7 +52,7 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
     private AliOSSUtil aliOSSUtil;
     @Override
     public Company getCompanyById(Long id) {
-        ThrowUtil.throwIfTrue(id <= 0, ErrorEnum.PARAMS_ERROR);
+        ThrowUtil.throwIfTrue(id ==null || id <= 0, ErrorEnum.PARAMS_ERROR);
         return companyMapper.selectById(id);
     }
 
@@ -155,35 +158,79 @@ public class CompanyServiceImpl extends ServiceImpl<CompanyMapper, Company>
 
     @Override
     public int updateCompanyById(Long id, CompanyInfoDto cid) {
-        Company cmp = new Company();
-        BeanUtils.copyProperties(cid, cmp);
-        ThrowUtil.throwIfTrue(id == null || id <= 0, ErrorEnum.PARAMS_ERROR);
-        ThrowUtil.throwIfTrue(!id.equals(cid.getCompanyId()), ErrorEnum.PARAMS_ERROR);
-        objectCheck(cmp);
-        //获取当前角色
-        User curUser = jwtUtil.parseLoginUser();
-        UserRoleEnum ure = UserRoleEnum.getRole(curUser.getRole());
+        ThrowUtil.throwIfTrue(!userMapper.exists(new LambdaQueryWrapper<User>()
+                        .eq(cid.getAdminId() != null, User::getUserId, cid.getAdminId())
+                        .eq(User::getIsDeleted, 0)
+                        .eq(User::getAccountStatus, UserAccountStatusEnum.NORMAL.getStatus())),
+                ErrorEnum.NOT_FOUND_ERROR, "设置公司管理员错误");
+        User optUser = jwtUtil.parseLoginUser();
+        Company target = companyMapper.selectById(id);
         //非系统管理员无法修改status
-        if (cmp.getStatus() != null) {
+        if (cid.getStatus() != null) {
             //用户不为系统管理员，且status字段被修改。抛出无权限异常
-            ThrowUtil.throwIfTrue(!UserRoleEnum.SYS_ADMIN.equals(ure)
+            ThrowUtil.throwIfTrue(!UserRoleEnum.SYS_ADMIN.getValue().equals(optUser.getRole())
                     && companyMapper.exists(new LambdaQueryWrapper<Company>()
                     .eq(Company::getCompanyId, id)
-                    .ne(Company::getStatus, cmp.getStatus())),
+                    .ne(Company::getStatus, cid.getStatus())),
                     ErrorEnum.UNAUTHORIZED);
+            target.setStatus(cid.getStatus());
+            target.setEditTime(LocalDate.now());
         }
-        if (UserRoleEnum.SYS_ADMIN.equals(ure)) {
-            cmp.setEditTime(new Date());
+        target.setCompanyName(cid.getCompanyName());
+        target.setCity(cid.getCity());
+        target.setIndustry(cid.getIndustry());
+        target.setScale(cid.getScale());
+        target.setIntroduction(cid.getIntroduction());
+        target.setAdminId(cid.getAdminId());
+        target.setUpdateTime(LocalDate.now());
+        try {
+            if (cid.getLogo() != null) {
+                aliOSSUtil.deleteFile(target.getLogoUrl());
+                String logoUrl = aliOSSUtil.uploadPictureAndCheck(cid.getLogo(), "company/" + target.getCompanyId().toString() + "/");
+                target.setLogoUrl(logoUrl);
+            }
+            if (cid.getBusinessLicense() != null) {
+                aliOSSUtil.deleteFile(target.getBusinessLicenseUrl());
+                String licenseUrl = aliOSSUtil.uploadPictureAndCheck(cid.getBusinessLicense(), "company/" + target.getCompanyId().toString() + "/");
+                target.setBusinessLicenseUrl(licenseUrl);
+            }
+        } catch (Exception e) {
+            throw new BusinessException(ErrorEnum.SYSTEM_ERROR, "上传图片失败");
         }
-        cmp.setUpdateTime(new Date());
+        return companyMapper.updateById(target);
+    }
 
-        return companyMapper.updateById(cmp);
+    @Override
+    public int updateCompanyStatusBySysAdmin(Long id, Integer status) {
+        ThrowUtil.throwIfTrue(id == null || id <= 0, ErrorEnum.PARAMS_ERROR, "公司ID不合法");
+        CompanyStatusEnum targetStatus = CompanyStatusEnum.getEnum(status);
+        ThrowUtil.throwIfTrue(targetStatus == null, ErrorEnum.PARAMS_ERROR, "公司状态不合法");
+        ThrowUtil.throwIfTrue(targetStatus == CompanyStatusEnum.DEREGISTER,
+                ErrorEnum.PARAMS_ERROR, "注销状态请调用注销接口");
+
+        Company target = companyMapper.selectById(id);
+        ThrowUtil.throwIfTrue(target == null || target.getIsDeleted() == 1,
+                ErrorEnum.NOT_FOUND_ERROR, "公司不存在或已删除");
+        ThrowUtil.throwIfTrue(CompanyStatusEnum.DEREGISTER.getStatus().equals(target.getStatus()),
+                ErrorEnum.OPTION_ERROR, "已注销公司不可修改状态");
+
+        target.setStatus(status);
+        target.setUpdateTime(LocalDate.now());
+        target.setEditTime(LocalDate.now());
+        return companyMapper.updateById(target);
     }
 
     @Override
     public Page<CompanyVo> getCompanyList(CompanySearchPageDto dto) {
         Page<CompanyVo> page = new Page<>(dto.getPageNum(), dto.getPageSize());
         companyMapper.getCompanyVoPage(page, dto);
+        return page;
+    }
+
+    @Override
+    public Page<CompanyVo> adminGetCompanyList(AdminCompanySearchPageDto dto) {
+        Page<CompanyVo> page = new Page<>(dto.getPageNum(), dto.getPageSize());
+        companyMapper.adminGetCompanyVoPage(page, dto);
         return page;
     }
 

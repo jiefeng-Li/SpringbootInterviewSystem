@@ -3,6 +3,7 @@ package com.cuit.interviewsystem.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
+import com.cuit.interviewsystem.constant.JobTags;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.model.dto.job.UpdateJobDto;
 import com.cuit.interviewsystem.model.dto.job.AddJobDto;
@@ -39,7 +40,7 @@ public class JobPositionController {
 
     @PostMapping("")
     @AuthCheck(roles = {UserRoleEnum.RECRUITER})
-    public Result<?> addJobPosition(@Valid AddJobDto addJobDto){
+    public Result<?> addJobPosition(@Valid @RequestBody AddJobDto addJobDto){
         return jobPositionService.addJobPosition(addJobDto) == 0 ?
                 Result.error(ErrorEnum.SYSTEM_ERROR) : Result.success("添加成功");
     }
@@ -53,9 +54,21 @@ public class JobPositionController {
 
     @PutMapping("/{id}")
     @AuthCheck(roles = {UserRoleEnum.RECRUITER})
-    public Result<?> updateJobPosition(@Valid UpdateJobDto updateJobDto, @PathVariable Long id){
+    public Result<?> updateJobPosition(@Valid @RequestBody UpdateJobDto updateJobDto, @PathVariable Long id){
         int i = jobPositionService.updateJobPosition(updateJobDto, id);
         return i == 0 ? Result.error(ErrorEnum.SYSTEM_ERROR) : Result.success("更新成功");
+    }
+
+    @GetMapping("/view")
+    @AuthCheck
+    public Result<?> getJobPositionByCompanyId(Long jobId){
+        jobPositionService.viewJobPosition(jobId);
+        return Result.success();
+    }
+
+    @GetMapping("/tags")
+    public Result<String[]> getJobTags(){
+        return Result.success(JobTags.TAGS);
     }
 
     @GetMapping("")

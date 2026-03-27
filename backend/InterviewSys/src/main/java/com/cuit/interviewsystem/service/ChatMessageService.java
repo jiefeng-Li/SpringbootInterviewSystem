@@ -17,4 +17,8 @@ public interface ChatMessageService extends IService<ChatMessage> {
     void saveChatMessage(ChatMessageDto message);
 
     List<ChatMessageVo> getUnreadMessageByReceiverId(Long userId);
+
+    void markMessagesAsRead(List<Long> messageIds);
+
+    void revokeMessage(Long id);
 }

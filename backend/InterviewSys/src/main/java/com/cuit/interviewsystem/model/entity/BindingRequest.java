@@ -2,7 +2,7 @@ package com.cuit.interviewsystem.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
-import java.util.Date;
+import java.time.LocalDate;
 import lombok.Data;
 
 /**
@@ -51,12 +51,12 @@ public class BindingRequest {
     /**
      * 审核时间
      */
-    private Date reviewedTime;
+    private LocalDate reviewedTime;
 
     /**
      * 申请失效时间
      */
-    private Date expiresAt;
+    private LocalDate expiresAt;
 
     /**
      * 逻辑删除
@@ -67,10 +67,10 @@ public class BindingRequest {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDate createTime;
 
     /**
      * 更新时间
      */
-    private Date updateTime;
+    private LocalDate updateTime;
 }

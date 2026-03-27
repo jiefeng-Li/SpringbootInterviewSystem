@@ -13,7 +13,8 @@ public enum UserAccountStatusEnum {
 
     BANED(0, "禁用"),
     NORMAL(1, "正常"),
-    LOCKED(2, "锁定");
+    LOCKED(2, "锁定"),
+    DEREGISTER(3, "注销");
 
     private final Integer status;
     private final String text;

@@ -2,10 +2,10 @@ package com.cuit.interviewsystem.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 
-import java.util.Date;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 /**
  * 简历基本信息
@@ -44,7 +44,7 @@ public class Resume {
     /**
      * 出生日期
      */
-    private Date birthday;
+    private LocalDate birthday;
 
     /**
      * 手机号
@@ -89,10 +89,10 @@ public class Resume {
     /**
      * 
      */
-    private Date createTime;
+    private LocalDate createTime;
 
     /**
      * 
      */
-    private Date updateTime;
+    private LocalDate updateTime;
 }

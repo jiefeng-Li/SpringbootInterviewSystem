@@ -1,4 +1,4 @@
-package com.cuit.interviewsystem.model.dto;
+package com.cuit.interviewsystem.model.dto.jobApplication;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;

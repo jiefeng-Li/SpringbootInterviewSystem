@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 /**
  * 系统用户表
@@ -63,7 +64,7 @@ public class User {
     /**
      * 最后登录时间
      */
-    private Date lastLoginTime;
+    private LocalDate lastLoginTime;
 
     /**
      * 逻辑删除(0未删,1已删)
@@ -74,17 +75,17 @@ public class User {
     /**
      * 创建时间
      */
-    private Date createTime;
+    private LocalDate createTime;
 
     /**
      * 更新时间
      */
-    private Date updateTime;
+    private LocalDate updateTime;
 
     /**
      * 系统更新时间
      */
-    private Date editTime;
+    private LocalDate editTime;
 
     /**
      * 用户所属公司ID

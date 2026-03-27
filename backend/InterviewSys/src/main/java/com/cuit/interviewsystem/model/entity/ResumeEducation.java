@@ -1,13 +1,14 @@
 package com.cuit.interviewsystem.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import java.util.Date;
+
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 /**
  * 简历教育经历
@@ -46,12 +47,12 @@ public class ResumeEducation {
     /**
      * 开始时间
      */
-    private Date startDate;
+    private LocalDate startDate;
 
     /**
      * 毕业时间（或至今）
      */
-    private Date endDate;
+    private LocalDate endDate;
 
     /**
      * 在校经历、荣誉等

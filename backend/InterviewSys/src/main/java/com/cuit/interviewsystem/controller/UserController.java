@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.ErrorEnum;
+import com.cuit.interviewsystem.model.dto.user.OwnBindingRequestPageDto;
 import com.cuit.interviewsystem.model.dto.company.CommonUserRegister;
 import com.cuit.interviewsystem.model.dto.user.*;
 import com.cuit.interviewsystem.model.entity.BindingRequest;
@@ -22,6 +23,7 @@ import com.cuit.interviewsystem.service.CompanyService;
 import com.cuit.interviewsystem.service.UserBindingRequestService;
 import com.cuit.interviewsystem.service.UserService;
 import com.cuit.interviewsystem.utils.JWTUtil;
+import com.cuit.interviewsystem.utils.RedisUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
@@ -32,7 +34,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 
 @Slf4j
@@ -48,6 +50,9 @@ public class UserController {
     private UserBindingRequestService bindingService;
     @Resource
     private JWTUtil jwtUtil;
+    @Resource
+    private RedisUtil redisUtil;
+
 
     /**
      * 管理员用户注册
@@ -72,7 +77,7 @@ public class UserController {
      */
     @Operation(summary = "公司用户注册")
     @PostMapping("/comp/register")
-    public Result<Long> compUserRegister(UserRegisterDto userRegisterDto) {
+    public Result<Long> compUserRegister(@RequestBody UserRegisterDto userRegisterDto) {
         long userId = userService.compUserRegister(userRegisterDto);
         return Result.success(userId);
     }
@@ -84,7 +89,7 @@ public class UserController {
      */
     @Operation(summary = "普通用户注册")
     @PostMapping("/register")
-    public Result<Long> commonUserRegister(CommonUserRegister cur) {
+    public Result<Long> commonUserRegister(@RequestBody CommonUserRegister cur) {
         long userId = userService.commonUserRegister(cur);
         return Result.success(userId);
     }
@@ -105,14 +110,23 @@ public class UserController {
             return Result.error(ErrorEnum.PARAMS_ERROR, "账号或密码错误");
         }
         String jwt = jwtUtil.sign(user);
+        UserVo userVo = UserVo.objToVo(user);
+        if (user.getCompanyId() != null)
+            userVo.setCompanyName(companyService.getCompanyById(user.getCompanyId()).getCompanyName());
+        redisUtil.set("userId=" + user.getUserId(), userVo, 1, TimeUnit.DAYS);
         return Result.success(jwt);
     }
 
     @Operation(summary = "获取当前的登录用户")
     @GetMapping("/current")
     public Result<UserVo> getCurrentUser() {
+        User cur = jwtUtil.parseLoginUser();
+        if (redisUtil.hasKey("userId=" + cur.getUserId()))
+            return Result.success((UserVo) redisUtil.get("userId=" + cur.getUserId()));
         User user = userService.getCurrentUser();
         UserVo res = UserVo.objToVo(user);
+        res.setCompanyName(companyService.getCompanyById(user.getCompanyId()).getCompanyName());
+        redisUtil.set("userId=" + cur.getUserId(), res);
         return Result.success(res);
     }
 
@@ -153,11 +167,15 @@ public class UserController {
     @Operation(summary = "根据组合条件获取一个用户")
     @GetMapping
     public Result<UserVo> getOneUser(User conditions) {
+        if (conditions.getUserId() != null && redisUtil.hasKey("userId=" + conditions.getUserId())) {
+            return Result.success((UserVo) redisUtil.get("userId=" + conditions.getUserId()));
+        }
         User res = userService.getOneUser(conditions);
         UserVo resVo = UserVo.objToVo(res);
         if (resVo != null && resVo.getCompanyId() != null) {
             resVo.setCompanyName(companyService.getCompanyById(res.getCompanyId()).getCompanyName());
         }
+        redisUtil.set("userId=" + res.getUserId(), resVo, 1, TimeUnit.DAYS);
         return Result.success(resVo);
     }
 
@@ -170,7 +188,8 @@ public class UserController {
         List<UserVo> res = new ArrayList<>();
         for (User u : records) {
             UserVo userVo = UserVo.objToVo(u);
-            userVo.setCompanyName(companyService.getCompanyById(u.getCompanyId()).getCompanyName());
+            if (u.getCompanyId() != null)
+                userVo.setCompanyName(companyService.getCompanyById(u.getCompanyId()).getCompanyName());
             res.add(userVo);
         }
         PageVo<UserVo> pageVo = new PageVo<>();
@@ -226,6 +245,7 @@ public class UserController {
         int i = userService.deleteOneUserById(id);
         if (i == 0)
             return Result.error(ErrorEnum.NOT_FOUND_ERROR.getCode(), "删除失败，用户不存在");
+        redisUtil.delete("userId=" + id);
         return Result.success(i, "删除成功");
     }
 
@@ -234,11 +254,38 @@ public class UserController {
     @Operation(summary = "根据id(userId)更新一个用户")
     @PutMapping({"/{id}"})
     @AuthCheck()
-    public Result updateOneUser(@PathVariable Long id, @RequestBody User user) {
-        int cnt = userService.updateOneUser(id, user);
-        if (cnt == 0)
+    public Result<UserVo> updateOneUser(@PathVariable Long id, @Valid @ModelAttribute UserUpdateDto user) {
+        User res = userService.updateOneUser(id, user);
+        UserVo resVo = UserVo.objToVo(res);
+        if (resVo == null)
             return Result.error(ErrorEnum.NOT_FOUND_ERROR.getCode(), "更新失败，用户不存在");
-        return Result.success();
+        resVo.setCompanyName(companyService.getCompanyById(res.getCompanyId()).getCompanyName());
+        redisUtil.set("userId=" + resVo.getUserId(), resVo);
+        return Result.success(resVo);
+    }
+
+    @Operation(summary = "系统管理员修改用户账号状态")
+    @PutMapping("/{id}/status")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
+    public Result<?> updateUserStatusByAdmin(@PathVariable Long id,
+                                             @Valid @RequestBody UserStatusUpdateDto dto) {
+        int i = userService.updateUserStatusByAdmin(id, dto.getAccountStatus());
+        if (i <= 0)
+            return Result.error(ErrorEnum.SYSTEM_ERROR, "更新失败");
+        redisUtil.delete("userId=" + id);
+        return Result.success(null, "更新成功");
+    }
+
+    @Operation(summary = "用户自行注销账号")
+    @PutMapping("/self/deregister")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN, UserRoleEnum.COMP_ADMIN, UserRoleEnum.RECRUITER, UserRoleEnum.JOB_SEEKER})
+    public Result<?> deregisterSelf() {
+        int i = userService.deregisterSelf();
+        if (i <= 0)
+            return Result.error(ErrorEnum.SYSTEM_ERROR, "注销失败");
+        Long userId = Long.parseLong(jwtUtil.getLoginUserInfo(JWTUtil.ELEMENT.USER_ID));
+        redisUtil.delete("userId=" + userId);
+        return Result.success(null, "注销成功");
     }
 
     //region  招聘者绑定公司
@@ -272,23 +319,35 @@ public class UserController {
 
     @Operation(summary = "招聘者绑定公司")
     @PostMapping("/binding")
-    @AuthCheck(roles = {UserRoleEnum.RECRUITER})
-    public Result<?> addBindingCompany(BindingRequestDto bindingRequestDto) {
-        String token = bindingService.bindingCompany(bindingRequestDto);
-        return Result.success(token, "提交成功");
+    @AuthCheck(roles = {UserRoleEnum.RECRUITER, UserRoleEnum.COMP_ADMIN})
+    public Result<?> addBindingCompany(@Valid @RequestBody BindingRequestDto bindingRequestDto) {
+        bindingService.bindingCompany(bindingRequestDto);
+        return Result.success(null, "提交成功");
+    }
+
+    @Operation(summary = "获取用户id的绑定记录")
+    @GetMapping("/binding/own/list")
+    @AuthCheck
+    public Result<PageVo<BindingRequestVo>> getBindingRequest(@Valid OwnBindingRequestPageDto dto) {
+        Page<BindingRequestVo> page = bindingService.getBindingRequestByUserId(dto);
+        PageVo<BindingRequestVo> res = PageVo.of(page);
+        res.getList().forEach(vo ->
+                vo.setUserPhone(DesensitizedUtil.mobilePhone(vo.getUserPhone()))
+        );
+        return Result.success(res);
     }
 
     @Operation(summary = "公司管理员审核绑定请求")
     @PutMapping("/binding/{id}")
     @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
-    public Result<?> reviewBindingRequest(@PathVariable Long id, @Valid ReviewBindingRequestDto dto) {
+    public Result<?> reviewBindingRequest(@PathVariable Long id, @Valid @RequestBody ReviewBindingRequestDto dto) {
         int i = bindingService.reviewBindingRequest(id, dto);
         return i == 0 ? Result.error(ErrorEnum.SYSTEM_ERROR, "审核失败") : Result.success(null, "审核成功");
     }
 
     @Operation(summary = "招聘者取消绑定请求")
     @DeleteMapping("/binding/cancel/{id}")
-    @AuthCheck(roles = {UserRoleEnum.RECRUITER})
+    @AuthCheck(roles = {UserRoleEnum.RECRUITER, UserRoleEnum.COMP_ADMIN})
     public Result<?> cancelBindingCompany(@PathVariable Long id) {
         int i = bindingService.cancelBinding(id);
         return i == 0 ? Result.error(ErrorEnum.SYSTEM_ERROR, "取消失败") : Result.success(null, "取消成功");

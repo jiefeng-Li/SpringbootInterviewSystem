@@ -3,7 +3,7 @@ package com.cuit.interviewsystem.model.vo;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Data
 public class CompanyVo {
@@ -57,5 +57,5 @@ public class CompanyVo {
      * 营业执照URL
      */
     private String businessLicenseUrl;
-    private Date createTime;
+    private LocalDate createTime;
 }

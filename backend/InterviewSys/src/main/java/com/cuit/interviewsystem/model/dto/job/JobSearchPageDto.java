@@ -17,6 +17,7 @@ public class JobSearchPageDto extends PageDto implements Serializable {
     @Serial
     private static final long serialVersionUID = -3645809734074569384L;
 
+    private String keyword;
     private Long companyId;
     private String workCity;
     private Integer jobType;

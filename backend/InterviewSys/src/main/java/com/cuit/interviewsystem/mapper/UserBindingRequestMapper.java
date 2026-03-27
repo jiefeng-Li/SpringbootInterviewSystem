@@ -1,6 +1,7 @@
 package com.cuit.interviewsystem.mapper;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.cuit.interviewsystem.model.dto.user.OwnBindingRequestPageDto;
 import com.cuit.interviewsystem.model.dto.user.BindingRequestPageDto;
 import com.cuit.interviewsystem.model.vo.BindingRequestVo;
 import com.cuit.interviewsystem.model.entity.BindingRequest;
@@ -16,4 +17,6 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserBindingRequestMapper extends BaseMapper<BindingRequest> {
     IPage<BindingRequestVo> getBindingPage(IPage<?> page, BindingRequestPageDto dto);
+
+    IPage<BindingRequestVo> getBindingPageByUserId(IPage<?> page, OwnBindingRequestPageDto dto);
 }

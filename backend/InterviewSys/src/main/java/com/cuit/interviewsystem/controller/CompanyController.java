@@ -6,23 +6,26 @@ import com.cuit.interviewsystem.annotation.AuthCheck;
 import com.cuit.interviewsystem.common.Result;
 import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
-import com.cuit.interviewsystem.model.dto.company.CompanyAddDto;
-import com.cuit.interviewsystem.model.dto.company.CompanyInfoDto;
-import com.cuit.interviewsystem.model.dto.company.CompanySearchPageDto;
+import com.cuit.interviewsystem.model.dto.company.*;
 import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.CompanyVo;
 import com.cuit.interviewsystem.model.vo.PageVo;
 import com.cuit.interviewsystem.service.CompanyService;
 import com.cuit.interviewsystem.utils.JWTUtil;
+import com.cuit.interviewsystem.utils.RedisUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @Slf4j
@@ -33,10 +36,19 @@ public class CompanyController {
     private CompanyService companyService;
     @Resource
     private JWTUtil jwtUtil;
+    @Resource
+    private RedisUtil redisUtil;
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+
 
     @GetMapping("/{id}")
     public Result<CompanyVo> getCompanyById(@PathVariable Long id) {
+        if (redisUtil.hasKey("companyId=" + id)) {
+            return Result.success((CompanyVo) redisUtil.get("companyId=" + id));
+        }
         CompanyVo c = companyService.getCompanyVoById(id);
+        redisUtil.set("companyId=" + id, c, 1, TimeUnit.DAYS);
         return Result.success(c);
     }
 
@@ -45,7 +57,12 @@ public class CompanyController {
     public Result<CompanyVo> getCompanyByToken() {
         String cmpId = jwtUtil.getLoginUserInfo(JWTUtil.ELEMENT.COMPANY_ID);
         ThrowUtil.throwIfTrue(cmpId == null, ErrorEnum.PARAMS_ERROR, "当前用户未绑定公司");
-        return Result.success(companyService.getCompanyVoById(Long.parseLong(cmpId)));
+        if (redisUtil.hasKey("companyId=" + cmpId)) {
+            return Result.success((CompanyVo) redisUtil.get("companyId=" + cmpId));
+        }
+        CompanyVo res = companyService.getCompanyVoById(Long.parseLong(cmpId));
+        redisUtil.set("companyId=" + cmpId, res, 1, TimeUnit.DAYS);
+        return Result.success(res);
     }
 
     @GetMapping("/status")
@@ -57,17 +74,40 @@ public class CompanyController {
         return Result.success(res);
     }
 
+    @GetMapping("/admin/list")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
+    public Result<PageVo<CompanyVo>> getCompanyListToAdmin(AdminCompanySearchPageDto dto) {
+        Page<CompanyVo> res = companyService.adminGetCompanyList(dto);
+        return Result.success(PageVo.of(res));
+    }
+
+
     @GetMapping("/list")
     @AuthCheck
     public Result<PageVo<CompanyVo>> getCompanyList(CompanySearchPageDto dto) {
+        // 构建缓存键，包含查询参数和分页信息
+        String cacheKey = String.format("company:list:%s", dto.toString());
+        PageVo<CompanyVo> cachedResult = (PageVo<CompanyVo>) redisUtil.get(cacheKey);
+        if (cachedResult != null) {
+            log.info("从Redis缓存中获取公司列表: {}", cacheKey);
+            return Result.success(cachedResult);
+        }
         Page<CompanyVo> res = companyService.getCompanyList(dto);
-        return Result.success(PageVo.of(res));
+        PageVo<CompanyVo> result = PageVo.of(res);
+        if (result.getTotal() != 0) {
+            redisUtil.set(cacheKey, result, 30, TimeUnit.MINUTES);
+            log.info("公司列表已存入Redis缓存: {}", cacheKey);
+        }
+        return Result.success(result);
     }
 
     @DeleteMapping("/{id}")
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result<?> deleteCompanyById(@PathVariable Long id) {
         int i = companyService.deleteCompanyById(id);
+        if (redisUtil.hasKey("companyId=" + id))
+            redisUtil.delete("companyId=" + id);
+        clearAllCompanyCache(); // 清除所有公司相关缓存
         return Result.success(null, i <= 0 ? "删除公司不存在或已被删除" : "删除成功");
     }
 
@@ -77,15 +117,34 @@ public class CompanyController {
         int i = companyService.deregisterCompanyById(id);
         if (i <= 0)
             return Result.error(ErrorEnum.SYSTEM_ERROR, "注销失败");
+        if (redisUtil.hasKey("companyId=" + id))
+            redisUtil.delete("companyId=" + id);
+        clearAllCompanyCache(); // 清除所有公司相关缓存
         return Result.success(null, "注销成功");
     }
 
     @PutMapping("/{id}")
-    public Result<Long> updateCompanyById(@PathVariable Long id, @RequestBody CompanyInfoDto cid) {
+    public Result<Long> updateCompanyById(@PathVariable Long id, @Valid @ModelAttribute CompanyInfoDto cid) {
         int i = companyService.updateCompanyById(id, cid);
         if (i <= 0)
             throw new BusinessException(ErrorEnum.NOT_FOUND_ERROR);
+        if (redisUtil.hasKey("companyId=" + id))
+            redisUtil.delete("companyId=" + id);
+        clearAllCompanyCache(); // 清除所有公司相关缓存
         return Result.success(null, "更新成功");
+    }
+
+    @PutMapping("/{id}/status")
+    @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
+    public Result<?> updateCompanyStatusBySysAdmin(@PathVariable Long id,
+                                                   @Valid @RequestBody CompanyStatusUpdateDto dto) {
+        int i = companyService.updateCompanyStatusBySysAdmin(id, dto.getStatus());
+        if (i <= 0)
+            return Result.error(ErrorEnum.SYSTEM_ERROR, "状态更新失败");
+        if (redisUtil.hasKey("companyId=" + id))
+            redisUtil.delete("companyId=" + id);
+        clearAllCompanyCache();
+        return Result.success(null, "状态更新成功");
     }
 
     /**
@@ -98,6 +157,27 @@ public class CompanyController {
     @AuthCheck(roles = {UserRoleEnum.COMP_ADMIN})
     public Result<String> addOneCompany(@ModelAttribute CompanyAddDto cad) {
         String newToken = companyService.addOneCompany(cad);
+        clearAllCompanyCache(); // 清除所有公司相关缓存
         return Result.success(newToken,"添加成功");
     }
+
+    /**
+     * 清除所有公司相关的缓存
+     */
+    private void clearAllCompanyCache() {
+        // 清除公司列表缓存
+        Set<String> listKeys = redisTemplate.keys("company:list:*");
+        if (listKeys != null && !listKeys.isEmpty()) {
+            redisTemplate.delete(listKeys);
+            log.info("已清除公司列表缓存");
+        }
+
+        // 清除单个公司信息缓存
+        Set<String> companyKeys = redisTemplate.keys("companyId=*");
+        if (companyKeys != null && !companyKeys.isEmpty()) {
+            redisTemplate.delete(companyKeys);
+            log.info("已清除公司信息缓存");
+        }
+    }
+
 }

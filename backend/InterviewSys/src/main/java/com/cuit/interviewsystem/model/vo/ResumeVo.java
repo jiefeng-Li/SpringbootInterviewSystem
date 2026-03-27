@@ -2,7 +2,7 @@ package com.cuit.interviewsystem.model.vo;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -32,7 +32,7 @@ public class ResumeVo {
     /**
      * 出生日期
      */
-    private Date birthday;
+    private LocalDate birthday;
 
     /**
      * 手机号
@@ -72,7 +72,7 @@ public class ResumeVo {
     /**
      *
      */
-    private Date createTime;
+    private LocalDate createTime;
 
     private List<ResumeEducationVo> educations;
     private List<ResumeExperienceVo> experiences;

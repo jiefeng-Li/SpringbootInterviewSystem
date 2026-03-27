@@ -2,10 +2,7 @@ package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.cuit.interviewsystem.model.dto.company.CommonUserRegister;
-import com.cuit.interviewsystem.model.dto.user.UserLoginDto;
-import com.cuit.interviewsystem.model.dto.user.UserPageDto;
-import com.cuit.interviewsystem.model.dto.user.UserRegisterDto;
-import com.cuit.interviewsystem.model.dto.user.UsersAddDto;
+import com.cuit.interviewsystem.model.dto.user.*;
 import com.cuit.interviewsystem.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
@@ -27,7 +24,11 @@ public interface UserService extends IService<User> {
 
     int deleteOneUserById(Long delUserId);
 
-    int updateOneUser(Long id, User user);
+    int updateUserStatusByAdmin(Long id, Integer accountStatus);
+
+    int deregisterSelf();
+
+    User updateOneUser(Long id, UserUpdateDto user);
 
     long compUserRegister(UserRegisterDto userRegisterDto);
     long commonUserRegister(CommonUserRegister cur);

@@ -1,6 +1,7 @@
 package com.cuit.interviewsystem.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.cuit.interviewsystem.model.dto.user.OwnBindingRequestPageDto;
 import com.cuit.interviewsystem.model.dto.user.BindingRequestDto;
 import com.cuit.interviewsystem.model.dto.user.BindingRequestPageDto;
 import com.cuit.interviewsystem.model.dto.user.ReviewBindingRequestDto;
@@ -15,7 +16,7 @@ import com.cuit.interviewsystem.model.vo.BindingRequestVo;
 */
 public interface UserBindingRequestService extends IService<BindingRequest> {
 
-    String bindingCompany(BindingRequestDto bindingRequestDto);
+    void bindingCompany(BindingRequestDto bindingRequestDto);
 
     String unbindCompany(Long id);
 
@@ -26,4 +27,6 @@ public interface UserBindingRequestService extends IService<BindingRequest> {
     int cancelBinding(Long id);
 
     int reviewBindingRequest(Long id, ReviewBindingRequestDto dto);
+
+    Page<BindingRequestVo> getBindingRequestByUserId(OwnBindingRequestPageDto dto);
 }

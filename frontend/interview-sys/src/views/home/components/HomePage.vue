@@ -44,7 +44,12 @@
     <div class="popular-job-container">
       <h2 style="text-align: center">热门职位</h2>
       <div class="job-card-box">
-        <div v-for="item in 8" :key="item" class="job-card">
+        <div
+          v-for="item in 8"
+          :key="item"
+          class="job-card"
+          @click="goToJobDetail(item)"
+        >
           <h3>职位 {{ item }}</h3>
         </div>
       </div>
@@ -61,7 +66,12 @@
     <div class="popular-company-container">
       <h2 style="text-align: center">热门企业</h2>
       <div class="company-card-box">
-        <div v-for="item in 6" :key="item" class="company-card">
+        <div
+          v-for="item in 6"
+          :key="item"
+          class="company-card"
+          @click="goToCompanyDetail(item)"
+        >
           <h3>公司 {{ item }}</h3>
         </div>
       </div>
@@ -103,6 +113,14 @@ const querySearchAsync = (queryString, cb) => {
 const queryAndJump = () => {
   console.log(keyword.value);
   router.push(`/search?keyword=${keyword.value}`);
+};
+
+const goToJobDetail = (jobId) => {
+  router.push({ name: "JobDetail", params: { id: jobId } });
+};
+
+const goToCompanyDetail = (companyId) => {
+  router.push({ name: "CompanyDetail", params: { id: companyId } });
 };
 
 const handleMouseEnter = (item) => {
@@ -193,6 +211,7 @@ const handleMouseLeave = (item) => {
         background-color: white;
         margin: 10px;
         box-sizing: border-box;
+        cursor: pointer;
       }
     }
   }
@@ -221,6 +240,7 @@ const handleMouseLeave = (item) => {
         background-color: white;
         margin: 10px;
         box-sizing: border-box;
+        cursor: pointer;
       }
     }
   }

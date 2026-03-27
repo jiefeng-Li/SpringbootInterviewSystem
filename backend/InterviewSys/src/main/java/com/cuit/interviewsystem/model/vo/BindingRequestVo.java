@@ -2,7 +2,8 @@ package com.cuit.interviewsystem.model.vo;
 
 import lombok.Data;
 
-import java.util.Date;
+import java.time.LocalDate;
+
 
 @Data
 public class BindingRequestVo {
@@ -12,13 +13,13 @@ public class BindingRequestVo {
     private String userPhone;
     private String companyName;
     private String applicationNotes;
-    private Long status;
+    private Integer status;
     private Long reviewedBy;
     private String reviewedByName;
     private String reviewNotes;
-    private Date reviewedTime;
-    private Date expiresAt;
+    private LocalDate reviewedTime;
+    private LocalDate expiresAt;
     private Integer isDeleted;
-    private Date createTime;
-    private Date updateTime;
+    private LocalDate createTime;
+    private LocalDate updateTime;
 }

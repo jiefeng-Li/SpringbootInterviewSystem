@@ -9,6 +9,7 @@ import com.cuit.interviewsystem.exception.BusinessException;
 import com.cuit.interviewsystem.exception.ErrorEnum;
 import com.cuit.interviewsystem.mapper.CompanyMapper;
 import com.cuit.interviewsystem.mapper.UserMapper;
+import com.cuit.interviewsystem.model.dto.user.OwnBindingRequestPageDto;
 import com.cuit.interviewsystem.model.dto.user.BindingRequestDto;
 import com.cuit.interviewsystem.model.dto.user.BindingRequestPageDto;
 import com.cuit.interviewsystem.model.dto.user.ReviewBindingRequestDto;
@@ -16,17 +17,21 @@ import com.cuit.interviewsystem.model.entity.BindingRequest;
 import com.cuit.interviewsystem.model.entity.Company;
 import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
+import com.cuit.interviewsystem.model.enums.UserAccountStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserBindingStatusEnum;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.BindingRequestVo;
 import com.cuit.interviewsystem.service.UserBindingRequestService;
 import com.cuit.interviewsystem.mapper.UserBindingRequestMapper;
 import com.cuit.interviewsystem.utils.JWTUtil;
+import com.cuit.interviewsystem.utils.RedisUtil;
 import com.cuit.interviewsystem.utils.ThrowUtil;
 import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.Objects;
 
@@ -46,11 +51,13 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
     private CompanyMapper companyMapper;
     @Resource
     private UserMapper userMapper;
+    @Resource
+    private RedisUtil redisUtil;
 
     private static final int EXPIRE_OFFSET_DAYS = 7;
 
     @Override
-    public String bindingCompany(BindingRequestDto bindingRequestDto) {
+    public void bindingCompany(BindingRequestDto bindingRequestDto) {
         BindingRequest br = new BindingRequest();
         BeanUtils.copyProperties(bindingRequestDto, br);
         User curUser = jwtUtil.parseLoginUser();
@@ -70,14 +77,9 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
                         .eq(BindingRequest::getStatus, UserBindingStatusEnum.REVIEWING.getStatus())
                         .lt(BindingRequest::getExpiresAt, new Date())),
                 ErrorEnum.PARAMS_ERROR, "已提交过申请");
-        ThrowUtil.throwIfTrue(br.getApplicationNotes().length() > 1024,
-                ErrorEnum.PARAMS_ERROR, "申请理由过长");
-
         br.setUserId(curUser.getUserId());
-        br.setExpiresAt(DateUtil.offsetDay(new Date(), EXPIRE_OFFSET_DAYS));
+        br.setExpiresAt(LocalDate.from(DateUtil.offsetDay(new Date(), EXPIRE_OFFSET_DAYS).toLocalDateTime()));
         bindingMapper.insert(br);
-        curUser.setCompanyId(br.getCompanyId());
-        return jwtUtil.sign(curUser);
     }
 
     /**
@@ -97,8 +99,17 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
             //若公司管理员的公司id与被解绑的用户的公司id不同则无法解绑
             ThrowUtil.throwIfTrue(!Objects.equals(curCompId, targetUser.getCompanyId()), ErrorEnum.UNAUTHORIZED);
             //若被解绑的用户角色为系统管理员、其他同一个企业的公司管理员，则无法解绑
-            ThrowUtil.throwIfTrue(UserRoleEnum.COMP_ADMIN.getValue().equals(targetUser.getRole()) || UserRoleEnum.SYS_ADMIN.getValue().equals(targetUser.getRole()),
+            ThrowUtil.throwIfTrue(UserRoleEnum.COMP_ADMIN.getValue().equals(targetUser.getRole())
+                            && !Objects.equals(targetUser.getUserId(), curUser.getUserId())
+                            || UserRoleEnum.SYS_ADMIN.getValue().equals(targetUser.getRole()),
                     ErrorEnum.UNAUTHORIZED);
+            ThrowUtil.throwIfTrue(!userMapper.exists(new LambdaQueryWrapper<User>()
+                            .ne(User::getUserId, curUser.getUserId())
+                        .eq(User::getCompanyId, curCompId)
+                        .eq(User::getRole, UserRoleEnum.COMP_ADMIN.getValue())
+                        .eq(User::getIsDeleted, 0)
+                        .eq(User::getAccountStatus, UserAccountStatusEnum.NORMAL.getStatus())),
+                    ErrorEnum.OPTION_ERROR, "无法解绑，该企业至少需要保留一个公司管理员");
         } else {
             //若当前操作用户为招聘者，则只能解绑自己
             ThrowUtil.throwIfTrue(!userId.equals(curUser.getUserId()), ErrorEnum.PARAMS_ERROR, "无权限解绑");
@@ -106,6 +117,7 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
         int i = userMapper.update(new LambdaUpdateWrapper<User>()
                 .set(User::getCompanyId, null)
                 .eq(User::getUserId, userId));
+        redisUtil.delete("userId=" + userId);
         curUser.setCompanyId(null);
         return i == 0 ? null : jwtUtil.sign(curUser);
     }
@@ -139,6 +151,7 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
     }
 
     @Override
+    @Transactional
     public int reviewBindingRequest(Long id, ReviewBindingRequestDto dto) {
         ThrowUtil.throwIfTrue(!Objects.equals(dto.getId(), id), ErrorEnum.PARAMS_ERROR);
         User curUser = jwtUtil.parseLoginUser();
@@ -149,12 +162,26 @@ public class UserBindingRequestServiceImpl extends ServiceImpl<UserBindingReques
         ThrowUtil.throwIfTrue(!Objects.equals(target.getStatus(), UserBindingStatusEnum.REVIEWING.getStatus()), ErrorEnum.PARAMS_ERROR, "申请已处理");
         ThrowUtil.throwIfTrue(Objects.equals(target.getStatus(), UserBindingStatusEnum.CANCEL.getStatus()), ErrorEnum.NOT_FOUND_ERROR, "申请已取消");
         ThrowUtil.throwIfTrue(!Objects.equals(curUser.getCompanyId(), target.getCompanyId()), ErrorEnum.UNAUTHORIZED, "无权限操作");
-        ThrowUtil.throwIfTrue(DateUtil.compare(new Date(), target.getExpiresAt()) > 0, ErrorEnum.PARAMS_ERROR, "申请已过期");
+        ThrowUtil.throwIfTrue(LocalDate.now().isAfter(target.getExpiresAt()), ErrorEnum.PARAMS_ERROR, "申请已过期");
         target.setReviewedBy(curUser.getUserId());
         target.setReviewNotes(dto.getReviewNotes());
         target.setStatus(setStatus.getStatus());
-        target.setReviewedTime(new Date());
-        target.setUpdateTime(new Date());
+        target.setReviewedTime(LocalDate.now());
+        target.setUpdateTime(LocalDate.now());
+        //修改用户的公司字段companyId为当前公司
+        User user = userMapper.selectById(target.getUserId());
+        user.setCompanyId(target.getCompanyId());
+        user.setUpdateTime(LocalDate.now());
+        userMapper.updateById(user);
+        redisUtil.delete("userId" + user.getUserId());
+        //TODO： 发送系统消息通知绑定成功
         return bindingMapper.updateById(target);
+    }
+
+    @Override
+    public Page<BindingRequestVo> getBindingRequestByUserId(OwnBindingRequestPageDto dto) {
+        Page<BindingRequestVo> page = new Page<>(dto.getPageNum(), dto.getPageSize());
+        bindingMapper.getBindingPageByUserId(page, dto);
+        return page;
     }
 }
