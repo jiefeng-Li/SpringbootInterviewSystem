@@ -68,7 +68,7 @@ CREATE TABLE `t_company_certification_record` (
    INDEX `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公司资质认证记录表';
 
--- 4. 创建求职者绑定公司的记录表
+-- 4. 创建招聘者绑定公司的记录表
 CREATE TABLE `t_binding_request` (
      `id` bigint NOT NULL AUTO_INCREMENT COMMENT '申请记录ID',
      `user_id` bigint NOT NULL COMMENT '申请人ID（招聘者）',
@@ -183,6 +183,7 @@ CREATE TABLE `t_resume_project`(
     INDEX `idx_resume_id` (`resume_id`)
  );
 
+# 7. 简历投递记录表
 drop table if exists `t_job_application`;
 CREATE TABLE `t_job_application` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '投递记录ID',
@@ -208,22 +209,31 @@ CREATE TABLE `t_job_application` (
     KEY `idx_job_user` (`job_position_id`, `user_id`) -- 联合索引，加速查重
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='简历投递记录表';
 
+# 8. 聊天记录表
 drop table if exists `t_chat_message`;
 CREATE TABLE `t_chat_message` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '消息ID',
     `send_id` bigint NOT NULL COMMENT '发送者ID',
     `receive_id` bigint NOT NULL COMMENT '接收者ID',
     `content` text NOT NULL COMMENT '消息内容',
-    `timestamp` bigint NOT NULL COMMENT '发送时间戳',
+    `timestamp` bigint NOT NULL COMMENT '客户端发送时间戳',
+    `sent_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '服务端发送时间',
+    `read_time` datetime DEFAULT NULL COMMENT '已读时间',
+    `revoke_time` datetime DEFAULT NULL COMMENT '撤回时间',
+    `msg_type` tinyint NOT NULL DEFAULT '0' COMMENT '消息类型(0文本,1系统消息)',
     `status` tinyint NOT NULL DEFAULT '0' COMMENT '消息状态(未读0,已读1,撤回2)',
     `is_deleted` tinyint(1) NOT NULL DEFAULT '0' COMMENT '逻辑删除',
     PRIMARY KEY (`id`),
     KEY `idx_send_id` (`send_id`),
     KEY `idx_receive_id` (`receive_id`),
-    KEY `idx_timestamp` (`timestamp`)
+    KEY `idx_timestamp` (`timestamp`),
+    KEY `idx_unread` (`receive_id`, `status`, `is_deleted`, `sent_time`),
+    KEY `idx_dialog_sr` (`send_id`, `receive_id`, `sent_time`),
+    KEY `idx_dialog_rs` (`receive_id`, `send_id`, `sent_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天记录表';
 
-drop table if exists `t_interview_record`;
+# 9. 面试通知表
+drop table if exists `t_interview_notice`;
 CREATE TABLE `t_interview_notice` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
     `job_application_id` bigint NOT NULL COMMENT '投递记录ID',
@@ -238,6 +248,7 @@ CREATE TABLE `t_interview_notice` (
     KEY `idx_interview_time` (`interview_time`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='面试通知表';
 
+# 10. Offer记录表
 drop table if exists `t_offer_record`;
 CREATE TABLE `t_offer_record` (
     `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',

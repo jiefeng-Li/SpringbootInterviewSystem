@@ -51,7 +51,7 @@ public class OfferRecordController {
 	}
 
 	@GetMapping("/list/sent")
-	@AuthCheck(roles = {UserRoleEnum.RECRUITER})
+	@AuthCheck(roles = {UserRoleEnum.RECRUITER, UserRoleEnum.SYS_ADMIN})
 	public Result<PageVo<OfferRecordVo>> getOfferListByRecruiter(@Valid OfferRecruiterPageDto dto) {
 		Page<OfferRecordVo> page = offerRecordService.getOfferListByRecruiter(dto);
 		return Result.success(PageVo.of(page));

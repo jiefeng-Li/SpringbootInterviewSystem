@@ -1,7 +1,7 @@
 <template>
   <BaseLayout>
     <template #header>
-      <div class="account-field">
+      <!-- <div class="account-field">
         <el-dropdown placement="bottom-end">
           <el-avatar :icon="UserFilled" />
           <template #dropdown>
@@ -27,7 +27,8 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-      </div>
+      </div> -->
+      <HomeHeader />
     </template>
 
     <template #aside>
@@ -42,6 +43,7 @@
 <script setup>
 import BaseLayout from "../layout/index.vue";
 import SysAdminAside from "./components/SysAdminAside.vue";
+import HomeHeader from "@/views/home/components/HomeHeader.vue";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user";
 import { onMounted } from "vue";

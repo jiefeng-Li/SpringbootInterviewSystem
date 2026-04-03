@@ -45,6 +45,26 @@ const router = createRouter({
           path: 'user-manage',
           name: 'SysAdminUserManage',
           component: () => import('@/views/sysadmin/components/UserManage.vue')
+        },
+        {
+          path: 'job-manage',
+          name: 'SysAdminJobManage',
+          component: () => import('@/views/sysadmin/components/JobManage.vue')
+        },
+        {
+          path: 'offer-manage',
+          name: 'SysAdminOfferManage',
+          component: () => import('@/views/sysadmin/components/OfferManage.vue')
+        },
+        {
+          path: 'statistics',
+          name: 'SysAdminStatistics',
+          component: () => import('@/views/sysadmin/components/DataStatistic.vue')
+        },
+        {
+          path: 'system-message',
+          name: 'SysAdminSystemMessage',
+          component: () => import('@/views/sysadmin/components/SystemMessagePush.vue')
         }
       ]
     },
@@ -115,6 +135,7 @@ const router = createRouter({
           { path: '/comp/certification', name: 'CompanyCertification', component: () => import('@/views/compadmin/components/CompCertification.vue') },
           { path: '/comp/comp-certification', name: 'CompanyCertification', component: () => import('@/views/compadmin/components/CompCertification.vue') },
           { path: '/comp/user-certification', name: 'UserCertification', component: () => import('@/views/compadmin/components/UserCertification.vue') },
+          { path: '/comp/user-manage', name: 'CompUserManage', component: () => import('@/views/compadmin/components/CompUserManage.vue') },
           { path: '/comp/statetistic' , name: 'CompanyStatistic', component: () => import('@/views/compadmin/components/DataStatistic.vue')},
           { path: '/comp/setting', name: 'CompanySetting', component: () => import('@/views/compadmin/components/CompSetting.vue')},
           {

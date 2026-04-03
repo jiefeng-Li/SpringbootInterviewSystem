@@ -16,20 +16,19 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @Slf4j
 public class ChatTextWebSocketHandler extends TextWebSocketHandler {
     @Resource
     private ChatMessageService chatMessageService;
-
-    private final Map<Long, WebSocketSession> sessions = new ConcurrentHashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Resource
+    private ObjectMapper objectMapper;
+    @Resource
+    private ChatSessionManager chatSessionManager;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        String query = session.getUri().getQuery();
         Long userId;
         try {
             userId = Long.parseLong((String) session.getAttributes().get("userId"));
@@ -38,7 +37,7 @@ public class ChatTextWebSocketHandler extends TextWebSocketHandler {
             throw new BusinessException(ErrorEnum.NOT_FOUND_ERROR);
         }
         List<ChatMessageVo> msg = chatMessageService.getUnreadMessageByReceiverId(userId);
-        sessions.put(userId, session);
+        chatSessionManager.putSession(userId, session);
         //获取请求头
         Map<String, String> headers = session.getHandshakeHeaders().toSingleValueMap();
         String token = headers.get("token");
@@ -48,40 +47,36 @@ public class ChatTextWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        Long sendId = null;
+        Long loginUserId;
         try {
-            sendId = Long.parseLong((String) session.getAttributes().get("userId"));
-            String payload = message.getPayload();
-            ChatMessageDto chatMessage = objectMapper.readValue(payload, ChatMessageDto.class);
-            log.info("收到消息: {}", chatMessage);
-            forwardMessage(chatMessage);
-            if (sendId != chatMessage.getSendId()) {
-                throw new BusinessException(ErrorEnum.PARAMS_ERROR, "发送用户与登录用户不一致");
-            }
+            loginUserId = Long.parseLong((String) session.getAttributes().get("userId"));
         } catch (Exception e) {
             session.close(CloseStatus.POLICY_VIOLATION);
             throw new BusinessException(ErrorEnum.NOT_LOGIN_ERROR);
         }
+
+        ChatMessageDto chatMessage;
+        try {
+            chatMessage = objectMapper.readValue(message.getPayload(), ChatMessageDto.class);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorEnum.PARAMS_ERROR, "消息格式错误");
+        }
+
+        log.info("收到消息: {}", chatMessage);
+        if (!loginUserId.equals(chatMessage.getSendId())) {
+            throw new BusinessException(ErrorEnum.PARAMS_ERROR, "发送用户与登录用户不一致");
+        }
+        forwardMessage(chatMessage);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        sessions.entrySet().removeIf(e -> e.getValue() == session);
+        chatSessionManager.removeSession(session);
     }
 
     private void forwardMessage(ChatMessageDto message) throws Exception {
-        WebSocketSession receiverSession = sessions.get(message.getReceiveId());
-        if (receiverSession != null && receiverSession.isOpen()) {
-            String json = objectMapper.writeValueAsString(message);
-            receiverSession.sendMessage(new TextMessage(json));
-        }
-        chatMessageService.saveChatMessage(message);
-    }
-
-    private Long extractUserId(String query) {
-        if (query != null && query.startsWith("userId=")) {
-            return Long.parseLong(query.substring(7));
-        }
-        throw new BusinessException(ErrorEnum.PARAMS_ERROR, "缺少用户id");
+        ChatMessageVo savedMessage = chatMessageService.saveChatMessage(message);
+        chatSessionManager.sendToUser(message.getSendId(), savedMessage);
+        chatSessionManager.sendToUser(message.getReceiveId(), savedMessage);
     }
 }

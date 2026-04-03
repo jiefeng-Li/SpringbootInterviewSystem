@@ -90,6 +90,7 @@ public class JobPositionVo implements Serializable {
      */
     private Long hiringManagerId;
     private String hiringManagerName;
+    private String hiringManagerAvatar;//负责人头像url
 
     /**
      * 职位状态(0草稿,1招聘中,2已暂停,3已招满,4已关闭)

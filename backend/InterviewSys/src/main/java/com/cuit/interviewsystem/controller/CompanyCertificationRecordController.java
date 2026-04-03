@@ -16,10 +16,12 @@ import com.cuit.interviewsystem.service.CompanyCertificationRecordService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("certification")
@@ -27,6 +29,8 @@ import java.util.List;
 public class CompanyCertificationRecordController {
     @Resource
     private CompanyCertificationRecordService recordService;
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 状态(0待审,1通过,2驳回,3取消)
@@ -67,6 +71,7 @@ public class CompanyCertificationRecordController {
     @AuthCheck(roles = {UserRoleEnum.SYS_ADMIN})
     public Result<String> reviewCompanyCertification(@PathVariable Long id, @RequestBody AdminReviewCertificationDto dto) {
         recordService.reviewCompanyCertification(dto);
+        clearCompanyCache();
         return Result.success("提交成功");
     }
 
@@ -86,5 +91,17 @@ public class CompanyCertificationRecordController {
         Page<CompanyCertificationRecordVo> page = recordService.getRecords(dto);
         PageVo<CompanyCertificationRecordVo> res = PageVo.of(page);
         return Result.success(res);
+    }
+
+    private void clearCompanyCache() {
+        Set<String> listKeys = redisTemplate.keys("company:list:*");
+        if (listKeys != null && !listKeys.isEmpty()) {
+            redisTemplate.delete(listKeys);
+        }
+
+        Set<String> companyKeys = redisTemplate.keys("companyId=*");
+        if (companyKeys != null && !companyKeys.isEmpty()) {
+            redisTemplate.delete(companyKeys);
+        }
     }
 }

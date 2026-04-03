@@ -9,6 +9,7 @@ import com.cuit.interviewsystem.model.dto.job.UpdateJobDto;
 import com.cuit.interviewsystem.model.dto.job.AddJobDto;
 import com.cuit.interviewsystem.model.dto.job.JobSearchPageDto;
 import com.cuit.interviewsystem.model.entity.JobPosition;
+import com.cuit.interviewsystem.model.entity.User;
 import com.cuit.interviewsystem.model.enums.UserRoleEnum;
 import com.cuit.interviewsystem.model.vo.JobPositionVo;
 import com.cuit.interviewsystem.model.vo.PageVo;
@@ -77,7 +78,9 @@ public class JobPositionController {
         JobPositionVo res = JobPositionVo.objToVo(jobPosition);
         if (res != null) {
             res.setCompanyName(companyService.getCompanyById(jobPosition.getCompanyId()).getCompanyName());
-            res.setHiringManagerName(userService.getById(jobPosition.getHiringManagerId()).getUsername());
+            User hr = userService.getById(jobPosition.getHiringManagerId());
+            res.setHiringManagerName(hr.getUsername());
+            res.setHiringManagerAvatar(hr.getAvatarUrl());
         }
         return Result.success(res);
     }
@@ -100,7 +103,9 @@ public class JobPositionController {
             JobPositionVo jobPositionVo = JobPositionVo.objToVo(record);
             if (jobPositionVo != null) {
                 jobPositionVo.setCompanyName(companyService.getCompanyById(record.getCompanyId()).getCompanyName());
-                jobPositionVo.setHiringManagerName(userService.getById(record.getHiringManagerId()).getUsername());
+                User hr = userService.getById(record.getHiringManagerId());
+                jobPositionVo.setHiringManagerName(hr.getUsername());
+                jobPositionVo.setHiringManagerAvatar(hr.getAvatarUrl());
                 list.add(jobPositionVo);
             }
         }

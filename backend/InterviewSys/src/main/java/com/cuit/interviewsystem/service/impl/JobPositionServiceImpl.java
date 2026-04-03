@@ -20,7 +20,6 @@ import com.cuit.interviewsystem.model.enums.CompanyStatusEnum;
 import com.cuit.interviewsystem.model.enums.JobApplicationStatusEnum;
 import com.cuit.interviewsystem.model.enums.JobPositionStatusEnum;
 import com.cuit.interviewsystem.model.enums.JobTypeEnum;
-import com.cuit.interviewsystem.model.vo.JobPositionVo;
 import com.cuit.interviewsystem.service.JobPositionService;
 import com.cuit.interviewsystem.mapper.JobPositionMapper;
 import com.cuit.interviewsystem.utils.JWTUtil;
@@ -33,7 +32,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Date;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 

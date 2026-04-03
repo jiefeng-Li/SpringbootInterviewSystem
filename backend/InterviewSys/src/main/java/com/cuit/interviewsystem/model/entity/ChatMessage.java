@@ -3,6 +3,8 @@ package com.cuit.interviewsystem.model.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 /**
  * 聊天记录表
  * @TableName t_chat_message
@@ -35,6 +37,26 @@ public class ChatMessage {
      * 发送时间戳
      */
     private Long timestamp;
+
+    /**
+     * 服务端发送时间
+     */
+    private LocalDateTime sentTime;
+
+    /**
+     * 已读时间
+     */
+    private LocalDateTime readTime;
+
+    /**
+     * 撤回时间
+     */
+    private LocalDateTime revokeTime;
+
+    /**
+     * 消息类型(0文本,1系统消息)
+     */
+    private Integer msgType;
 
     /**
      * 消息状态(未读0,已读1,撤回2)

@@ -709,7 +709,7 @@ const saveAndExportResume = async () => {
         return;
       }
 
-      // 导出简历
+      // 导出简历（与 ApiTest 一致的 PDF 检查和下载逻辑）
       const exportRes = await getResumeDownload(
         resumeId,
         resumeForm.templateId,
@@ -722,12 +722,14 @@ const saveAndExportResume = async () => {
       }
 
       if (exportRes?.data) {
-        // 创建下载链接
         const blob = exportRes.data;
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.setAttribute("download", `resume_${resumeId}.pdf`);
+        link.setAttribute(
+          "download",
+          `resume_${resumeId}_tpl_${resumeForm.templateId}.pdf`,
+        );
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -742,6 +744,7 @@ const saveAndExportResume = async () => {
       ElMessage.error(saveRes?.data?.message || "保存简历失败");
     }
   } catch (error) {
+    console.error("API Error:", error);
     if (error !== false) {
       ElMessage.error("保存并导出简历失败，请检查表单信息");
     }

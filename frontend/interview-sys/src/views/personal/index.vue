@@ -19,7 +19,7 @@
 <script setup>
 import BaseLayout from "../layout/index.vue";
 import PersonalAside from "./components/PersonalAside.vue";
-import HomeHeader from "../home/components/HomeHeader.vue";
+import HomeHeader from "@/views/home/components/HomeHeader.vue";
 import { useUserStore } from "@/stores/user";
 import { onMounted, ref } from "vue";
 

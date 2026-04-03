@@ -15,6 +15,8 @@
         <el-menu-item index="/comp/info">企业信息</el-menu-item>
         <el-menu-item index="/comp/comp-certification">企业认证</el-menu-item>
         <el-menu-item index="/comp/user-certification">用户认证</el-menu-item>
+        <el-menu-item index="/comp/user-manage">用户管理</el-menu-item>
+        <el-menu-item index="/comp/statetistic">统计分析</el-menu-item>
       </el-sub-menu>
       <!-- <el-menu-item index="/comp/statetistic">
         <el-icon><TrendCharts /></el-icon>

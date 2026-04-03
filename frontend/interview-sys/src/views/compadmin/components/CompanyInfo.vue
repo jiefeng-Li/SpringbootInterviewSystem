@@ -123,8 +123,8 @@ const loadingCompany = ref(false);
 const statusMap = {
   0: "待审",
   1: "正常",
-  2: "驳回",
-  3: "禁用",
+  2: "禁用",
+  3: "注销",
 };
 
 const getStatusText = (status) => statusMap[status] || "未知";

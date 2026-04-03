@@ -10,6 +10,20 @@
               <span class="dot">·</span>
               <span>{{ jobDetail.workCity || "工作城市待定" }}</span>
             </div>
+            <div
+              v-if="jobDetail.hiringManagerId"
+              class="manager-entry"
+              @click="openHiringManagerChat"
+            >
+              <el-avatar :size="28" :src="jobDetail.hiringManagerAvatar">
+                {{ (jobDetail.hiringManagerName || "负").slice(0, 1) }}
+              </el-avatar>
+              <span class="manager-label">负责人：</span>
+              <span class="manager-name">{{
+                jobDetail.hiringManagerName || "未知"
+              }}</span>
+              <span class="manager-chat-link">聊一聊</span>
+            </div>
           </div>
           <div class="salary-wrap">
             <div class="salary">
@@ -113,7 +127,7 @@
 
 <script setup>
 import { onMounted, reactive, ref } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import { useUserStore } from "@/stores";
 import { getJobPositionById, jobView } from "@/api/job";
@@ -121,6 +135,7 @@ import { getResumesPageByUserId } from "@/api/resume";
 import { addJobApplication } from "@/api/application";
 
 const route = useRoute();
+const router = useRouter();
 const userStore = useUserStore();
 const loading = ref(false);
 const jobDetail = ref(null);
@@ -155,6 +170,22 @@ const formatSalary = (minSalary, maxSalary) => {
     return `${minSalary}元/月起`;
   }
   return `最高${maxSalary}元/月`;
+};
+
+const openHiringManagerChat = () => {
+  const managerId = Number(jobDetail.value?.hiringManagerId || 0);
+  if (!managerId) {
+    ElMessage.warning("暂无负责人信息");
+    return;
+  }
+  router.push({
+    path: "/personal/message",
+    query: {
+      targetUserId: String(managerId),
+      targetName: jobDetail.value?.hiringManagerName || "",
+      targetAvatar: jobDetail.value?.hiringManagerAvatar || "",
+    },
+  });
 };
 
 const fetchJobDetail = async () => {
@@ -312,6 +343,39 @@ onMounted(() => {
   margin-top: 12px;
   color: #666;
   font-size: 14px;
+}
+
+.manager-entry {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #f7fbff;
+  border: 1px solid #dbeafe;
+  cursor: pointer;
+  user-select: none;
+}
+
+.manager-entry:hover {
+  background: #edf5ff;
+}
+
+.manager-label {
+  color: #4b5563;
+  font-size: 13px;
+}
+
+.manager-name {
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.manager-chat-link {
+  color: #1677ff;
+  font-size: 13px;
 }
 
 .dot {

@@ -15,6 +15,26 @@
         <el-icon><User /></el-icon>
         <span>用户状态管理</span>
       </el-menu-item>
+
+      <el-menu-item index="/admin/job-manage">
+        <el-icon><Collection /></el-icon>
+        <span>职位管理</span>
+      </el-menu-item>
+
+      <el-menu-item index="/admin/offer-manage">
+        <el-icon><Document /></el-icon>
+        <span>Offer记录</span>
+      </el-menu-item>
+
+      <el-menu-item index="/admin/statistics">
+        <el-icon><DataLine /></el-icon>
+        <span>统计看板</span>
+      </el-menu-item>
+
+      <el-menu-item index="/admin/system-message">
+        <el-icon><Bell /></el-icon>
+        <span>系统消息推送</span>
+      </el-menu-item>
     </el-menu>
   </el-scrollbar>
 </template>
@@ -22,7 +42,15 @@
 <script setup>
 import { computed } from "vue";
 import { useRoute } from "vue-router";
-import { Files, OfficeBuilding, User } from "@element-plus/icons-vue";
+import {
+  Bell,
+  Collection,
+  DataLine,
+  Document,
+  Files,
+  OfficeBuilding,
+  User,
+} from "@element-plus/icons-vue";
 
 const route = useRoute();
 

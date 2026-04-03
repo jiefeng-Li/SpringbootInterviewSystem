@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+import java.util.Arrays;
 import java.util.Map;
 
 @Component
@@ -21,8 +22,24 @@ public class WebSocketAuthInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
-            // 获取请求头中的token
-            String token = servletRequest.getServletRequest().getHeader("Authorization");
+            String token = servletRequest.getServletRequest().getHeader("token");
+            if (token == null || token.isBlank()) {
+                token = servletRequest.getServletRequest().getHeader("Authorization");
+            }
+            if (token != null && token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            if (token == null || token.isBlank()) {
+                String query = servletRequest.getServletRequest().getQueryString();
+                if (query != null) {
+                    token = Arrays.stream(query.split("&"))
+                            .map(pair -> pair.split("=", 2))
+                            .filter(arr -> arr.length == 2 && "token".equals(arr[0]))
+                            .map(arr -> arr[1])
+                            .findFirst()
+                            .orElse(null);
+                }
+            }
 
             // 验证token是否有效
             if (token != null && jwtUtil.verify(token)) {

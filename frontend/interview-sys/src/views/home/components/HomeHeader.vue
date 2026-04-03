@@ -24,7 +24,11 @@
           </el-dropdown-item>
           <el-dropdown-item @click="router.push('/personal/message')">
             <el-icon><Bell /></el-icon>消息通知
-            <el-badge class="mark" :value="12" />
+            <el-badge
+              class="mark"
+              :value="unreadMessageCount"
+              :hidden="unreadMessageCount <= 0"
+            />
           </el-dropdown-item>
           <el-dropdown-item @click="router.push('/personal/settings')">
             <el-icon><Comment /></el-icon>系统设置
@@ -45,10 +49,18 @@
 
 <script setup>
 import { useRouter, useRoute } from "vue-router";
-import { UserFilled, CloseBold } from "@element-plus/icons-vue";
+import {
+  UserFilled,
+  CloseBold,
+  User,
+  Bell,
+  Comment,
+  QuestionFilled,
+} from "@element-plus/icons-vue";
 import { useUserStore } from "@/stores/user";
-import { ref, onMounted, watch } from "vue";
+import { ref, onBeforeUnmount, onMounted, watch } from "vue";
 import { ElMessage } from "element-plus";
+import { getChatContacts } from "@/api/chat";
 
 const router = useRouter();
 const route = useRoute();
@@ -103,6 +115,53 @@ const handleLogout = () => {
 };
 
 const isLogin = ref(false);
+const unreadMessageCount = ref(0);
+
+const UNREAD_EVENT = "chat-unread-changed";
+const CHAT_WS_MESSAGE_EVENT = "chat-ws-message";
+
+const fetchUnreadCount = async () => {
+  if (!userStore.isloginned) {
+    unreadMessageCount.value = 0;
+    return;
+  }
+  try {
+    const { data } = await getChatContacts();
+    const contacts = data?.data || data || [];
+    unreadMessageCount.value = contacts.reduce(
+      (sum, item) => sum + Number(item?.unreadCount || 0),
+      0,
+    );
+  } catch {
+    unreadMessageCount.value = 0;
+  }
+};
+
+const handleGlobalWsMessage = (event) => {
+  if (!userStore.isloginned) return;
+  try {
+    const payload = event?.detail;
+    if (!payload) return;
+
+    if (Array.isArray(payload)) {
+      unreadMessageCount.value = payload.filter(
+        (msg) =>
+          Number(msg?.receiveId) === Number(userStore.userId) &&
+          Number(msg?.status) === 0,
+      ).length;
+      return;
+    }
+
+    if (
+      Number(payload?.receiveId) === Number(userStore.userId) &&
+      Number(payload?.status) === 0
+    ) {
+      unreadMessageCount.value += 1;
+    }
+  } catch {
+    // ignore invalid payload
+  }
+};
 
 // const router = useRouter();
 const userStore = useUserStore();
@@ -114,10 +173,30 @@ onMounted(() => {
     // 如果已登录，可以在这里获取用户信息或执行其他操作
 
     console.log("用户已登录");
+    fetchUnreadCount();
   } else {
     console.log("用户未登录");
   }
+  window.addEventListener(UNREAD_EVENT, fetchUnreadCount);
+  window.addEventListener(CHAT_WS_MESSAGE_EVENT, handleGlobalWsMessage);
 });
+
+onBeforeUnmount(() => {
+  window.removeEventListener(UNREAD_EVENT, fetchUnreadCount);
+  window.removeEventListener(CHAT_WS_MESSAGE_EVENT, handleGlobalWsMessage);
+});
+
+watch(
+  () => userStore.isloginned,
+  (loggedIn) => {
+    isLogin.value = loggedIn;
+    if (loggedIn) {
+      fetchUnreadCount();
+    } else {
+      unreadMessageCount.value = 0;
+    }
+  },
+);
 </script>
 
 <style lang="scss" scoped>

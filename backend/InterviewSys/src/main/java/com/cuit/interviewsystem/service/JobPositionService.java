@@ -6,7 +6,6 @@ import com.cuit.interviewsystem.model.dto.job.AddJobDto;
 import com.cuit.interviewsystem.model.dto.job.JobSearchPageDto;
 import com.cuit.interviewsystem.model.entity.JobPosition;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.cuit.interviewsystem.model.vo.JobPositionVo;
 
 /**
 * @author jiefe

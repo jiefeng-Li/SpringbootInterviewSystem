@@ -4,6 +4,7 @@ import com.cuit.interviewsystem.model.entity.ChatMessage;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.cuit.interviewsystem.model.vo.ChatMessageVo;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
 import java.util.List;
@@ -18,9 +19,23 @@ import java.util.List;
 public interface ChatMessageMapper extends BaseMapper<ChatMessage> {
 
 
-    @Select("select * from t_chat_message where receive_id = #{reciveId} " +
-            "and is_deleted = 0 and status = 0")
-    List<ChatMessageVo> selectByReceiveId(Long receiveId);
+    @Select("select * from t_chat_message where receive_id = #{receiveId} " +
+        "and is_deleted = 0 and status = 0 order by sent_time asc")
+    List<ChatMessageVo> selectByReceiveId(@Param("receiveId") Long receiveId);
+
+    @Select("select * from t_chat_message where is_deleted = 0 and " +
+        "((send_id = #{userId} and receive_id = #{targetUserId}) or " +
+        "(send_id = #{targetUserId} and receive_id = #{userId})) " +
+        "order by sent_time desc limit #{limit}")
+    List<ChatMessageVo> selectConversationMessages(@Param("userId") Long userId,
+                           @Param("targetUserId") Long targetUserId,
+                           @Param("limit") Integer limit);
+
+        @Select("select * from t_chat_message where is_deleted = 0 and " +
+            "(send_id = #{userId} or receive_id = #{userId}) " +
+            "order by sent_time desc limit #{limit}")
+        List<ChatMessageVo> selectRecentMessagesByUser(@Param("userId") Long userId,
+                               @Param("limit") Integer limit);
 }
 
 

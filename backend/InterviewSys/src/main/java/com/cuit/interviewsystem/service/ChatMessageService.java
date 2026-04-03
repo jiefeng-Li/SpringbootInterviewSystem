@@ -3,6 +3,7 @@ package com.cuit.interviewsystem.service;
 import com.cuit.interviewsystem.model.dto.ChatMessageDto;
 import com.cuit.interviewsystem.model.entity.ChatMessage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.cuit.interviewsystem.model.vo.ChatContactVo;
 import com.cuit.interviewsystem.model.vo.ChatMessageVo;
 
 import java.util.List;
@@ -14,9 +15,13 @@ import java.util.List;
 */
 public interface ChatMessageService extends IService<ChatMessage> {
 
-    void saveChatMessage(ChatMessageDto message);
+    ChatMessageVo saveChatMessage(ChatMessageDto message);
+
+    List<ChatContactVo> getChatContacts();
 
     List<ChatMessageVo> getUnreadMessageByReceiverId(Long userId);
+
+    List<ChatMessageVo> getConversationMessages(Long targetUserId, Integer limit);
 
     void markMessagesAsRead(List<Long> messageIds);
 

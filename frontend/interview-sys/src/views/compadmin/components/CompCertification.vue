@@ -13,7 +13,7 @@
         :rules="rules"
         ref="formRef"
         label-width="120px"
-        v-if="!userStore.companyId"
+        v-if="canSubmitCertification"
       >
         <el-form-item label="联系人" prop="contactName">
           <el-input
@@ -51,10 +51,16 @@
         </el-form-item>
       </el-form>
       <div v-else class="already-certified">
-        <el-tag type="success">已认证公司</el-tag>
-        <span style="margin-left: 10px"
-          >您已绑定公司，无法再次提交认证申请。</span
-        >
+        <el-tag :type="!userStore.companyId ? 'info' : 'success'">
+          {{ !userStore.companyId ? "未绑定公司" : "不可提交" }}
+        </el-tag>
+        <span style="margin-left: 10px">
+          {{
+            !userStore.companyId
+              ? "请先注册并绑定公司后再提交认证申请。"
+              : "仅公司状态为待审时可提交认证申请。"
+          }}
+        </span>
       </div>
     </el-card>
 
@@ -170,9 +176,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { useUserStore } from "@/stores/user";
+import { getCompanyById } from "@/api/company";
 import {
   getCompanyCertificationList,
   addCompanyCertification,
@@ -181,6 +188,11 @@ import {
 const userStore = useUserStore();
 const formRef = ref(null);
 const submitting = ref(false);
+const companyStatus = ref(null);
+
+const canSubmitCertification = computed(() => {
+  return !!userStore.companyId && companyStatus.value === 0;
+});
 
 // 认证表单数据
 const certForm = reactive({
@@ -265,6 +277,11 @@ const formatDate = (dateString) => {
 
 // 提交认证表单
 const submitForm = async () => {
+  if (!canSubmitCertification.value) {
+    ElMessage.warning("仅公司状态为待审时可提交认证申请");
+    return;
+  }
+
   if (!formRef.value) return;
 
   await formRef.value.validate(async (valid) => {
@@ -299,7 +316,8 @@ const resetForm = () => {
 // 获取认证记录列表
 const fetchCertRecords = async () => {
   if (!userStore.companyId) {
-    ElMessage.error("未绑定公司");
+    certRecords.value = [];
+    total.value = 0;
     return;
   }
 
@@ -330,6 +348,28 @@ const fetchCertRecords = async () => {
   }
 };
 
+// 获取公司状态
+const fetchCompanyStatus = async () => {
+  if (!userStore.companyId) {
+    companyStatus.value = null;
+    return;
+  }
+
+  try {
+    const res = await getCompanyById(userStore.companyId);
+    if (res.data.code === 200) {
+      companyStatus.value = res.data.data?.status ?? null;
+    } else {
+      companyStatus.value = null;
+      ElMessage.error(res.data.message || "获取公司状态失败");
+    }
+  } catch (error) {
+    companyStatus.value = null;
+    console.error("获取公司状态失败", error);
+    ElMessage.error("获取公司状态失败");
+  }
+};
+
 // 处理筛选条件变化
 const handleFilterChange = () => {
   pagination.pageNum = 1;
@@ -357,6 +397,7 @@ const handleViewDetail = (record) => {
 
 // 组件挂载时获取认证记录
 onMounted(() => {
+  fetchCompanyStatus();
   fetchCertRecords();
 });
 </script>

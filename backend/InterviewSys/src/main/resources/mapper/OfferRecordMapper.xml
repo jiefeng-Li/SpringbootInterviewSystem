@@ -67,7 +67,9 @@
             left join t_user recruiter on offer.recruiter_id = recruiter.user_id
             left join t_job_position position on offer.job_position_id = position.id
         where offer.is_deleted = 0
-          and offer.recruiter_id = #{dto.recruiterId}
+        <if test="dto.recruiterId != null">
+            and offer.recruiter_id = #{dto.recruiterId}
+        </if>
         <if test="dto.companyId != null">
             and offer.company_id = #{dto.companyId}
         </if>

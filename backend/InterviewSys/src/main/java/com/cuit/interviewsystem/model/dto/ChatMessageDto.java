@@ -15,6 +15,11 @@ public class ChatMessageDto {
     @Length(max = 1024, message = "消息过长")
     @NotBlank(message = "消息不能为空")
     private String content;
-    @NotNull(message = "时间戳不能为空")
+
     private Long timestamp;
+
+    /**
+     * 消息类型(0文本,1系统消息)
+     */
+    private Integer msgType;
 }

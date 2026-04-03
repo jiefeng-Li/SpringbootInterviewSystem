@@ -45,12 +45,32 @@
       <h2 style="text-align: center">热门职位</h2>
       <div class="job-card-box">
         <div
-          v-for="item in 8"
-          :key="item"
+          v-for="item in jobList"
+          :key="item.id"
           class="job-card"
-          @click="goToJobDetail(item)"
+          @click="goToJobDetail(item.id)"
         >
-          <h3>职位 {{ item }}</h3>
+          <div class="job-card-header">
+            <h3>{{ item.title || "未命名职位" }}</h3>
+            <p class="salary">
+              {{
+                item.minSalary && item.maxSalary
+                  ? `${item.minSalary}-${item.maxSalary} 元`
+                  : "薪资面议"
+              }}
+            </p>
+          </div>
+          <p class="job-company">{{ item.companyName || "未知公司" }}</p>
+          <div class="job-meta">
+            <span>{{ item.workCity || "城市待定" }}</span>
+            <span>{{ item.experience || "经验不限" }}</span>
+          </div>
+          <div class="job-manager">
+            <el-avatar :size="24" :src="item.hiringManagerAvatar">
+              {{ (item.hiringManagerName || "招").slice(0, 1) }}
+            </el-avatar>
+            <span>负责人：{{ item.hiringManagerName || "未设置" }}</span>
+          </div>
         </div>
       </div>
       <div style="display: flex; justify-content: center">
@@ -67,12 +87,31 @@
       <h2 style="text-align: center">热门企业</h2>
       <div class="company-card-box">
         <div
-          v-for="item in 6"
-          :key="item"
+          v-for="item in companyList"
+          :key="item.companyId"
           class="company-card"
-          @click="goToCompanyDetail(item)"
+          @click="goToCompanyDetail(item.companyId)"
         >
-          <h3>公司 {{ item }}</h3>
+          <div class="company-head">
+            <el-avatar :size="52" :src="item.logoUrl">
+              {{ (item.companyName || "企").slice(0, 1) }}
+            </el-avatar>
+            <div class="company-title">
+              <h3>{{ item.companyName || "未命名公司" }}</h3>
+              <p>{{ item.city || "城市待定" }}</p>
+            </div>
+          </div>
+          <div class="company-tags">
+            <el-tag size="small" type="primary">{{
+              item.industry || "行业待完善"
+            }}</el-tag>
+            <el-tag size="small" type="success">{{
+              item.scale || "规模待完善"
+            }}</el-tag>
+          </div>
+          <p class="company-intro">
+            {{ item.introduction || "该公司暂未完善简介" }}
+          </p>
         </div>
       </div>
       <div style="display: flex; justify-content: center">
@@ -90,13 +129,19 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { Search } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
+import { getJobPositionList } from "@/api/job";
+import { getCompanyList } from "@/api/company";
 
 const router = useRouter();
 const jobPositionZIndex = ref(-1);
 const text = ref("");
+const jobList = ref([]);
+const companyList = ref([]);
+const homeJobPageSize = 8;
+const homeCompanyPageSize = 6;
 
 const keyword = ref("");
 const querySearchAsync = (queryString, cb) => {
@@ -131,6 +176,37 @@ const handleMouseEnter = (item) => {
 const handleMouseLeave = (item) => {
   jobPositionZIndex.value = -1;
 };
+
+const fetchHomeJobs = async () => {
+  try {
+    const res = await getJobPositionList({
+      pageNum: 1,
+      pageSize: homeJobPageSize,
+    });
+    jobList.value = res?.data?.data?.list || [];
+  } catch (error) {
+    console.error("获取首页职位失败:", error);
+    jobList.value = [];
+  }
+};
+
+const fetchHomeCompanies = async () => {
+  try {
+    const res = await getCompanyList({
+      pageNum: 1,
+      pageSize: homeCompanyPageSize,
+    });
+    companyList.value = res?.data?.data?.list || [];
+  } catch (error) {
+    console.error("获取首页公司失败:", error);
+    companyList.value = [];
+  }
+};
+
+onMounted(() => {
+  fetchHomeJobs();
+  fetchHomeCompanies();
+});
 </script>
 
 <style lang="scss" scoped>
@@ -205,13 +281,62 @@ const handleMouseLeave = (item) => {
       padding: 10px;
       box-sizing: border-box;
       .job-card {
-        display: inline-block;
+        display: inline-flex;
+        flex-direction: column;
+        justify-content: space-between;
         width: 210px;
         height: 190px;
         background-color: white;
         margin: 10px;
+        padding: 14px;
+        border-radius: 10px;
+        border: 1px solid #ebeef5;
         box-sizing: border-box;
         cursor: pointer;
+        transition: all 0.2s ease;
+        .job-card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          gap: 8px;
+          h3 {
+            margin: 0;
+            color: #303133;
+            font-size: 16px;
+            font-weight: 600;
+            line-height: 1.35;
+          }
+          .salary {
+            margin: 0;
+            color: #f56c6c;
+            font-size: 13px;
+            white-space: nowrap;
+          }
+        }
+        .job-company {
+          margin: 8px 0 4px;
+          color: #606266;
+          font-size: 13px;
+        }
+        .job-meta {
+          display: flex;
+          gap: 8px;
+          color: #909399;
+          font-size: 12px;
+        }
+        .job-manager {
+          margin-top: 10px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          color: #606266;
+          font-size: 12px;
+        }
+        &:hover {
+          border-color: #b3d8ff;
+          box-shadow: 0 8px 20px rgba(64, 158, 255, 0.15);
+          transform: translateY(-2px);
+        }
       }
     }
   }
@@ -234,13 +359,61 @@ const handleMouseLeave = (item) => {
       padding: 10px;
       box-sizing: border-box;
       .company-card {
-        display: inline-block;
+        display: inline-flex;
+        flex-direction: column;
         width: 260px;
         height: 230px;
         background-color: white;
         margin: 10px;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid #ebeef5;
         box-sizing: border-box;
         cursor: pointer;
+        transition: all 0.2s ease;
+        .company-head {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          .company-title {
+            min-width: 0;
+            h3 {
+              margin: 0;
+              font-size: 16px;
+              color: #303133;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            p {
+              margin: 6px 0 0;
+              color: #909399;
+              font-size: 13px;
+            }
+          }
+        }
+        .company-tags {
+          margin-top: 12px;
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        .company-intro {
+          margin-top: 12px;
+          color: #606266;
+          font-size: 13px;
+          line-height: 1.5;
+          overflow: hidden;
+          display: -webkit-box;
+          line-clamp: 3;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+        }
+        &:hover {
+          border-color: #c6e2ff;
+          box-shadow: 0 10px 24px rgba(64, 158, 255, 0.14);
+          transform: translateY(-2px);
+        }
       }
     }
   }
